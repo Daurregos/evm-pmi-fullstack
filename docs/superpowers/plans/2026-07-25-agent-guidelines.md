@@ -123,10 +123,11 @@ Ejecutar:
 
 ```bash
 git status --short
+git add -N AGENTS.md
 git diff -- AGENTS.md
 ```
 
-Resultado esperado: `AGENTS.md` es el único archivo de implementación sin confirmar y el diff coincide con el contrato aprobado.
+Resultado esperado: `AGENTS.md` es el único archivo de implementación sin confirmar y el diff completo coincide con el contrato aprobado. `git add -N` permite revisar el contenido de un archivo nuevo sin prepararlo todavía para commit.
 
 - [ ] **Step 4: Commit the implementation**
 
