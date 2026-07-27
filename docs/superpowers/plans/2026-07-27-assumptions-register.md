@@ -54,14 +54,14 @@ Use exactly these 22 normalized decisions as the completeness checklist:
 14. The visual state has only unfavorable, neutral and favorable levels.
 15. An unevaluable indicator is shown with the neutral visual treatment.
 16. With PV zero and EV positive, the product may show «avance anticipado» separately from SPI.
-17. The consolidated view counts activities with positive EV and zero AC, warns of possible pending cost, does not declare the data invalid, and never treats the case as favorable in cost.
-18. Amounts and indices display two decimals, progress displays an integer percentage, exact ties round away from zero, classification uses the unrounded index, and markers appear only for a rounding-hidden band crossing.
-19. Invalid input is rejected with the field and violated rule identified, while the previous state remains unchanged.
-20. Name and cutoff date are required; BAC is positive; AC is non-negative; both progress percentages are inclusive from 0% to 100%.
-21. A third party can validate all described behavior without knowing technical decisions.
-22. Trace within item 3, not a new row: the S-curve is a future evolution that requires history and is not an accidental omission.
+17. The consolidated view counts activities with positive EV and zero AC to warn of possible pending cost without declaring the data invalid.
+18. With positive EV and zero AC, cost may be pending registration and the case is never shown as favorable in cost.
+19. Amounts and indices display two decimals, progress displays an integer percentage, exact ties round away from zero, classification uses the unrounded index, and markers appear only for a rounding-hidden band crossing.
+20. Invalid input is rejected with the field and violated rule identified, while the previous state remains unchanged.
+21. Name and cutoff date are required; BAC is positive; AC is non-negative; both progress percentages are inclusive from 0% to 100%.
+22. A third party can validate all described behavior without knowing technical decisions.
 
-The §10 S-curve/history statement supplies the origin, justification and impact for item 3; item 22 must not produce an additional table row. The fixed/non-configurable band in §10 is an additional trace of item 13, and the one-project-at-a-time statement in §10 is an additional trace of item 1; neither creates a new row. The five derived activity cases mentioned by RF-08 remain origins for the visual-state and edge-case rows above rather than becoming extra rules.
+The §10 S-curve/history statement supplies the origin, justification and impact for item 3 and must not produce an additional table row. The fixed/non-configurable band in §10 is an additional trace of item 13, and the one-project-at-a-time statement in §10 is an additional trace of item 1; neither creates a new row. The five derived activity cases mentioned by RF-08 remain origins for the visual-state and edge-case rows above rather than becoming extra rules.
 
 - [ ] **Step 3: Assign \`Resuelto en\` without inference.**
 
@@ -84,7 +84,7 @@ single photo or history consequences -> ADR-005
 count of activities with unrecorded cost -> ADR-006b
 ```
 
-Use an allowed ADR only where its decision explicitly absorbs that exact assumption; otherwise write \`—\`. The grouped cost row uses ADR-006b only for the count; its pending-cost warning, invalid-data treatment and non-favorable interpretation remain \`—\`. The confirmed-row refresh in item 12 is \`—\` and must not receive ADR-007. The fixed/non-configurable band and one-project-at-a-time clauses inherit their traces above and do not create additional ADR mappings.
+Use an allowed ADR only where its decision explicitly absorbs that exact assumption; otherwise write \`—\`. Item 17 uses ADR-006b only for the count; item 18 remains \`—\` for its pending-cost and non-favorable interpretation. The confirmed-row refresh in item 12 is \`—\` and must not receive ADR-007. The fixed/non-configurable band and one-project-at-a-time clauses inherit their traces above and do not create additional ADR mappings.
 
 ### Task 2: Write the assumptions document
 
@@ -103,7 +103,7 @@ incluidas las que aparecen fuera de §8, y registra su trazabilidad a los ADR.
 
 | Supuesto | Origen | Justificación | Impacto si resulta falso | Resuelto en |
 |---|---|---|---|---|
-La tabla continúa con 22 filas, una por cada decisión normalizada de Task 1; el texto sobre la curva S de item 22 se incorpora en la fila temporal de item 3 y no crea una fila adicional.
+La tabla continúa con 22 filas reales, una por cada decisión normalizada de Task 1; el texto sobre la curva S se incorpora en la fila temporal de item 3 y no crea una fila adicional.
 
 ## Supuestos con mayor riesgo
 
@@ -118,7 +118,7 @@ Use section references such as \`§2\`, \`§3\`, \`RF-01\`, \`§7.4\` and \`§10
 
 - [ ] **Step 3: Check the explicit ADR mapping.**
 
-Confirm the five required rows contain exactly \`ADR-005\`, \`ADR-006b\`, \`ADR-008\`, \`ADR-006a\` and \`ADR-007\` respectively; verify item 12 is \`—\`, the grouped cost row uses ADR-006b only for its count, and every other ADR reference is one of the permitted mappings supported by the corresponding ADR text.
+Confirm the five required rows contain exactly \`ADR-005\`, \`ADR-006b\`, \`ADR-008\`, \`ADR-006a\` and \`ADR-007\` respectively; verify item 12 is \`—\`, item 17 uses ADR-006b only for its count, item 18 is \`—\`, and every other ADR reference is one of the permitted mappings supported by the corresponding ADR text.
 
 ### Task 3: Verify and commit the document
 
