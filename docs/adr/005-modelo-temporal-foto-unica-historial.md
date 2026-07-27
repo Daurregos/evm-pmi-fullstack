@@ -22,6 +22,7 @@ Cada proyecto conserva una única foto mutable identificada por su fecha de cort
 ## Consecuencias
 
 - Cada proyecto tiene un único estado vigente; su fecha de corte aplica a todas las actividades y no existen cortes independientes por actividad.
+- Cambiar la fecha de corte reetiqueta la foto vigente: no crea un periodo nuevo, no versiona ni reinicia los datos capturados de las actividades.
 - Las ediciones son reemplazos: no se pueden reconstruir observaciones anteriores, auditar cambios ni generar tendencias o curva S. Este costo es aceptado por el alcance.
 - Persistencia de indicadores, recálculo y borrado pertenecen a ADR-002, ADR-007 y ADR-008.
 - Si se requieren comparaciones entre cortes, auditoría o curva S, esta decisión deberá revisarse.
@@ -31,4 +32,4 @@ Cada proyecto conserva una única foto mutable identificada por su fecha de cort
 
 ## Verificación
 
-Pruebas de integración comprueban que cada proyecto expone una sola fecha de corte vigente, que editar el proyecto o sus actividades reemplaza el estado anterior y que no existe una operación para consultar versiones históricas. Una revisión del modelo confirma que las actividades no poseen fechas de corte propias ni estructuras de historial.
+Pruebas de integración verifican los resultados esperados contra `evm-fixture.json` al editar la fecha de corte, el proyecto y sus actividades. Una revisión confirma la ausencia de fechas por actividad e historial.
