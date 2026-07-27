@@ -39,7 +39,7 @@ Expected: occurrences from §2, §3, §4, §5, RF-01, RF-02, RF-03, RF-05, RF-06
 Use exactly these 22 normalized decisions as the completeness checklist:
 
 1. Several projects exist and one is selected for the dashboard.
-2. Portfolio management, authentication, permissions, lifecycle states, report history/recovery, dependencies, calendars, resources, baselines, billing and detailed schedules are outside scope of the PRD (§2 and §10).
+2. Portfolio management, gestión de usuarios, authentication, permissions, lifecycle states, report history/recovery, dependencies, calendars, resources, baselines, billing and detailed schedules are outside scope of the PRD (§2 and §10).
 3. One common project cutoff date governs all activities; the current project is a single photo without history, and the S-curve/history path is future evolution outside scope.
 4. The project leader is the only contemplated actor.
 5. Creating or editing a project updates that project.
