@@ -12,11 +12,11 @@ RF-03, RF-04, RF-05 y RF-08 exigen resultados, consolidación e interpretaciones
 
 ## Decisión
 
-Los montos usan decimal base diez y los porcentajes fracciones internas entre cero y uno; ningún resultado intermedio se cuantiza o redondea y se usa precisión suficiente para garantizar el redondeo final matemáticamente correcto, incluso de cocientes no terminantes; CPI y SPI se clasifican sin redondear; la presentación redondea montos e índices a dos decimales y el avance a porcentaje entero, aleja de cero los empates exactos y antepone `<` a 0,99 o `>` a 1,01 solo si el valor completo está fuera de la banda.
+Los montos usan decimal base diez y los porcentajes se representan como fracciones internas entre cero y uno; ningún resultado intermedio se cuantiza o redondea y se usa precisión suficiente para garantizar el redondeo final matemáticamente correcto, incluso de cocientes no terminantes; CPI y SPI se clasifican sin redondear; la presentación redondea montos e índices a dos decimales y el avance a porcentaje entero, aleja de cero los empates exactos y antepone `<` a 0,99 o `>` a 1,01 solo si el valor completo está fuera de la banda.
 
 ## Alternativas consideradas
 
-- **Punto flotante binario:** simplifica, pero sus aproximaciones alteran redondeos y clasificaciones límite.
+- **Punto flotante binario:** simplifica, pero sus aproximaciones pueden alterar redondeos y clasificaciones límite.
 - **Enteros escalados:** dan montos exactos, pero porcentajes, cocientes no terminantes e índices requerirían distintas escalas y conversiones.
 - **Clasificar el índice mostrado:** evita marcadores, pero amplía la banda neutral efectiva y cambia estados de §7.4.
 
