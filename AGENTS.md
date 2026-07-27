@@ -49,7 +49,7 @@ Los planes de Superpowers detallan la ejecución; no reemplazan las specs ni las
 - Consolida sumando BAC, PV, EV y AC por actividad; calcula variaciones, ratios y proyecciones después. Nunca promedies CPI ni SPI.
 - El avance del proyecto es `EV_total / BAC_total`.
 - Las divisiones por cero producen estados de negocio legítimos definidos o no evaluables según el PRD; no son errores técnicos.
-- La interpretación de CPI y SPI es salida del sistema. Aplica la banda neutral definida en el PRD al valor mostrado.
+- La interpretación de CPI y SPI es salida del sistema. Aplica la banda neutral al valor sin redondear, según lo definido por el PRD.
 - En requisitos de producto, conserva la trazabilidad: `[E]` explícito, `[D]` derivado necesariamente del dominio y `[S]` supuesto adoptado.
 
 No dupliques aquí las fórmulas ni la matriz completa de estados. Si cambia una regla EVM, actualiza primero el PRD y después sus artefactos dependientes.
