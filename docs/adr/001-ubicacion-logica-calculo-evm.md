@@ -12,7 +12,7 @@ RF-03 exige calcular automáticamente por actividad; RF-04 y §7.1 exigen consol
 
 ## Decisión
 
-La lógica de cálculo EVM reside en un único módulo de dominio del backend, invocado por la capa de aplicación para obtener indicadores por actividad y consolidados, mientras la interfaz se limita a presentar sus resultados.
+La lógica de cálculo EVM reside en un único módulo de dominio del backend, invocado por la capa de aplicación para obtener indicadores por actividad y consolidados.
 
 ## Alternativas consideradas
 
@@ -25,9 +25,10 @@ La lógica de cálculo EVM reside en un único módulo de dominio del backend, i
 - Actividades y consolidado reutilizan las mismas reglas y casos límite.
 - Las pruebas del dominio cubren fórmulas, consolidación e interpretaciones sin depender de la interfaz ni del almacenamiento.
 - El backend es responsable de entregar resultados coherentes a todos sus consumidores.
-- Como costo, la interfaz no obtiene resultados autoritativos durante la digitación: espera la confirmación y respuesta del backend, coherente con RF-03.
+- Como consecuencia de esa ubicación, la interfaz presenta los resultados producidos por el backend en lugar de calcularlos.
+- Por la misma razón, la interfaz no produce resultados autoritativos durante la digitación. ADR-007 decide la estrategia de recálculo y el contrato de respuesta tras una edición.
 - Si el producto necesitara operar sin conexión o sin backend, esta decisión debería revisarse, probablemente a favor de un módulo compartido.
 
 ## Verificación
 
-Pruebas unitarias del módulo de dominio cubren los ejemplos de RF-03 y RF-04 y los cinco casos de §7.3; pruebas de integración comprueban que los casos de uso retornan esos resultados. Una revisión de dependencias confirma que controladores, persistencia e interfaz no contienen fórmulas ni clasificación EVM duplicadas.
+Pruebas unitarias y de integración verifican contra `evm-fixture.json` los resultados esperados del módulo de dominio y de los casos de uso. Una revisión de dependencias confirma que controladores, persistencia e interfaz no contienen fórmulas ni clasificación EVM duplicadas.
