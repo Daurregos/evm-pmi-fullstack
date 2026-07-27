@@ -66,7 +66,7 @@
 
 | ID | Requisito | Criterio de aceptación |
 |---|---|---|
-| RF-01 | [E] Crear, editar y eliminar proyectos. [S] Seleccionar uno entre varios. | [S] Dado un proyecto, crearlo o editarlo lo actualiza; seleccionarlo cambia la vista analizada; eliminarlo lo retira junto con sus actividades. |
+| RF-01 | [E] Crear, editar y eliminar proyectos. [S] Seleccionar uno entre varios. | [S] Dado un proyecto, crearlo o editarlo lo actualiza; seleccionarlo cambia la vista analizada; eliminarlo lo retira junto con sus actividades. [S] Al eliminar el proyecto seleccionado, el dashboard queda sin selección aunque existan otros proyectos. |
 | RF-02 | [E] Crear, editar y eliminar actividades, capturando únicamente los cinco datos. | [E] Dados valores válidos, la operación actualiza la tabla. [S] Un valor inválido se rechaza indicando el campo y la regla incumplida. [D] Ningún indicador es editable. |
 | RF-03 | [E] Calcular automáticamente los ocho indicadores por actividad. [S] Recalcular al confirmar la edición, no durante la digitación. | [D] Dados BAC 1.000, plan 50 %, avance 40 % y AC 500, entonces se muestran PV 500,00 · EV 400,00 · CV −100,00 · SV −100,00 · CPI 0,80 · SPI 0,80 · EAC 1.250,00 · VAC −250,00. |
 | RF-04 | [D] Consolidar sumando magnitudes monetarias antes de calcular ratios y avance. Nunca promediar índices. | [D] Dadas dos actividades con BAC/PV/EV/AC de 100/100/100/50 y 100/100/100/200, entonces los totales son 200/200/200/250, con CPI 0,80, SPI 1,00 y avance 100 %. Un CPI consolidado de 1,25 (promedio de índices) incumple el criterio. |
@@ -127,7 +127,7 @@
 | [S] El BAC del proyecto es la suma de los BAC de sus actividades. | [S] Evita dos presupuestos contradictorios. | [S] Requeriría conciliar el valor propio con la suma. → ADR |
 | [S] Eliminar un proyecto elimina físicamente sus actividades. | [S] No se exige auditoría ni recuperación. | [S] Requeriría conservación y borrado lógico. → ADR |
 | [S] La banda neutral inclusiva es 0,99–1,01. | [S] Tolera desviaciones de hasta 1 % sin reportar alarma. | [S] Cambiaría el estado de los valores cercanos a 1. |
-| [S] Existen varios proyectos y el dashboard muestra uno seleccionado. | [S] Evita el análisis de portafolio, fuera de alcance. | [S] Cambiarían la navegación y el nivel de consolidación. → ADR |
+| [S] Existen varios proyectos y el dashboard muestra como máximo uno seleccionado. | [S] Evita el análisis de portafolio, fuera de alcance. | [S] Cambiarían la navegación y el nivel de consolidación. → ADR |
 | [S] El estado visual tiene tres niveles: desfavorable, neutral y favorable. | [S] Responde «bien o mal» sin escalonar severidad. | [S] Un nivel de alerta intermedio requeriría umbrales adicionales. |
 | [S] El recálculo se dispara al confirmar la edición. | [S] Evita estados intermedios inconsistentes durante la digitación. | [S] El cálculo continuo cambiaría la experiencia y el contrato de lectura. → ADR |
 | [S] Con PV cero y EV positivo se muestra «avance anticipado» separado de SPI. | [D] SPI no es evaluable; SV positivo aporta contexto. | [S] Omitir la nota ocultaría trabajo ejecutado antes del plan. |
@@ -142,7 +142,7 @@
 
 ## 10. Fuera de alcance y limitaciones conocidas
 
-**Fuera de alcance.** [S] Autenticación, permisos, consolidación de portafolios, estados de actividad, historial de reportes y recuperación de elementos eliminados. [S] Gestión de dependencias, calendarios, recursos y líneas base.
+**Fuera de alcance.** [S] Autenticación, permisos, consolidación de portafolios, estados capturados de ciclo de vida de la actividad, historial de reportes y recuperación de elementos eliminados. [S] Gestión de dependencias, calendarios, recursos y líneas base.
 
 **Limitaciones conocidas.**
 
