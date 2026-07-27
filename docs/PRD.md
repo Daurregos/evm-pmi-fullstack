@@ -110,7 +110,7 @@
 
 ### 7.4 Presentación numérica
 
-[D] Los cálculos encadenados no redondean ni cuantizan resultados intermedios y emplean precisión de trabajo suficiente para que el redondeo final sea matemáticamente correcto, incluso en cocientes decimales no terminantes. [S] Los montos y los índices se presentan con dos decimales y el avance, como porcentaje entero; todos se redondean al más cercano y los empates exactos se resuelven alejándose de cero. [S] La banda neutral inclusiva de 0,99 a 1,01, la interpretación y el estado visual se aplican al índice sin redondear. [S] Solo cuando un índice fuera de la banda se presenta exactamente como 0,99 o 1,01, se antepone respectivamente `<` o `>` para revelar el cruce que oculta el redondeo; ningún otro valor presentado lleva esos marcadores.
+[D] Cada valor presentado coincide con el redondeo matemáticamente correcto del resultado obtenido al aplicar las fórmulas sin redondear ni cuantizar resultados intermedios. [S] Los montos y los índices se presentan con dos decimales y el avance, como porcentaje entero; todos se redondean al más cercano y los empates exactos se resuelven alejándose de cero. [S] La banda neutral inclusiva de 0,99 a 1,01, la interpretación y el estado visual se aplican al índice sin redondear. [S] Solo cuando un índice fuera de la banda se presenta exactamente como 0,99 o 1,01, se antepone respectivamente `<` o `>` para revelar el cruce que oculta el redondeo; ningún otro valor presentado lleva esos marcadores.
 
 ### 7.5 Validación de entrada
 
