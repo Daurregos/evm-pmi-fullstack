@@ -11,11 +11,17 @@ Antes de cambiar el producto, revisa las fuentes aplicables en este orden:
 3. OpenSpec: mantiene la propuesta, las especificaciones, el SDD y las tareas del cambio activo.
 4. Código, pruebas y evidencia: materializan y verifican el comportamiento aprobado.
 
-No resuelvas silenciosamente contradicciones en el código. Corrige o escala primero el artefacto responsable. Evita copiar contenido entre niveles; enlaza la fuente canónica.
+No resuelvas silenciosamente contradicciones en el código. Corrige o escala primero el artefacto responsable. Evita copiar contenido entre niveles; enlaza la fuente canónica. Si el trabajo sobre un ADR revela una ambigüedad o cambia un comportamiento visible, actualiza primero `docs/PRD.md`; después alinea el ADR y sus artefactos dependientes. Tras modificar una fuente superior, audita explícitamente sus dependientes, incluido este `AGENTS.md` y OpenSpec cuando exista un cambio activo.
 
 ## Required change workflow
 
-Usa OpenSpec para administrar el alcance y el SDD. Usa Superpowers para analizar y ejecutar el trabajo con disciplina.
+Usa OpenSpec para administrar el alcance y el SDD de cambios de producto o implementación. Usa Superpowers para analizar y ejecutar el trabajo con disciplina.
+
+Un cambio dedicado exclusivamente a crear o actualizar ADR no crea, actualiza, aplica ni archiva artefactos OpenSpec. Usa `superpowers:brainstorming`, revisión documental y `superpowers:verification-before-completion`; usa `superpowers:writing-plans` solo cuando la ejecución tenga varios pasos. `superpowers:test-driven-development` se reserva para código y correcciones de comportamiento.
+
+Si un ADR surge dentro de un cambio OpenSpec activo, el ADR registra la decisión y los artefactos de diseño, specs o tareas del cambio lo referencian.
+
+Para cambios gestionados con OpenSpec, sigue este flujo:
 
 1. Inspecciona el estado de Git, el PRD, los ADR aplicables y los cambios OpenSpec activos.
 2. Antes de trabajo creativo o cambios de comportamiento, usa `superpowers:brainstorming`.
@@ -28,6 +34,8 @@ Usa OpenSpec para administrar el alcance y el SDD. Usa Superpowers para analizar
 
 Los planes de Superpowers detallan la ejecución; no reemplazan las specs ni las tareas canónicas de OpenSpec. Si divergen, actualiza OpenSpec antes de continuar.
 
+Los planes referencian las rutas canónicas de PRD y ADR, describen cambios concretos y definen criterios verificables; no reproducen el texto completo de esos artefactos.
+
 ## GitFlow and worktrees
 
 - Nunca hagas commits directamente en `main` ni en `develop`.
@@ -36,6 +44,7 @@ Los planes de Superpowers detallan la ejecución; no reemplazan las specs ni las
 - Verifica que `.worktrees/` esté ignorado antes de crear el worktree.
 - Dirige cada pull request de integración a `develop`.
 - Mantén commits pequeños y lógicos. Conserva en commits separados versiones aprobadas cuya comparación aporte trazabilidad.
+- Mientras la rama no se haya publicado, consolida correcciones menores de revisión en el commit lógico correspondiente; no crees un commit por cada microajuste.
 - Crear un PR no autoriza fusionarlo. Fusiónalo solo cuando el usuario lo solicite o exista autorización explícita.
 - No elimines una rama ni un worktree antes de confirmar la integración y comprobar que no tiene cambios pendientes.
 - Después de integrar, retira el worktree limpio y poda su metadata. Conserva las ramas salvo que se solicite eliminarlas.
@@ -70,6 +79,8 @@ Usa los comandos reales del proyecto para pruebas, lint y build. Para cambios do
 git diff --check
 ```
 
+`git diff --check` no inspecciona archivos nuevos aún no rastreados. Antes de verificar uno, usa `git add -N <ruta-exacta>` o una alternativa que lo incluya efectivamente sin incorporar contenido ajeno.
+
 Antes del cierre:
 
 1. Comprueba cada requisito o tarea contra el diff resultante.
@@ -77,5 +88,6 @@ Antes del cierre:
 3. Revisa que el commit contenga solo archivos del cambio.
 4. Confirma el estado del PR y su destino `develop`.
 5. Informa evidencia, limitaciones y cambios locales preservados.
+6. Ejecuta literalmente los comandos prescritos y confirma que validan el artefacto objetivo.
 
 No declares que algo funciona, está integrado o está limpio basándote solo en una edición, una ejecución anterior o el reporte de otro agente.
