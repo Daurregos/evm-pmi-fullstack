@@ -22,13 +22,13 @@ La API mantiene cada indicador derivado en una respuesta exitosa y usa `null` ex
 
 ## Consecuencias
 
-- Los consumidores comprueban `null` antes de interpretar u operar con el valor; ADR-006 decide el tipo y formato de los valores evaluables.
-- `null` no puede significar dato desconocido, no solicitado ni cálculo pendiente.
+- Los consumidores comprueban `null` antes de usar el valor; no significa dato desconocido, omitido ni pendiente.
 - Los errores reales de validación o infraestructura conservan un canal distinto de esta condición de negocio.
-- La presencia de los indicadores permanece estable; ADR-006 decide sus nombres, agrupación y envolvente.
+- Los indicadores siempre están presentes; ADR-006 decide sus nombres, agrupación y envolvente.
 - El estado visual neutral de RF-08 representa la ausencia de evaluación, no un índice neutral.
-- Como costo, cada consumidor incorpora manejo condicional antes de usar el valor.
+- Cada consumidor maneja `null` condicionalmente.
+- Redondear a dos decimales destruye la información necesaria para decidir `<0,99` o `>1,01`; ADR-006 transporta el valor con precisión completa y la representación resuelta por el backend. El frontend no deriva marcadores, conforme a ADR-001.
 
 ## Verificación
 
-Pruebas de contrato cubren los cinco estados del PRD §7.3 y un proyecto vacío: comprueban `null` en las divisiones no evaluables, `CPI = 0` cuando `EV = 0` y `AC > 0`, `SPI = 0` cuando `EV = 0` y `PV > 0`, presencia estable de cada indicador y respuesta exitosa. Un caso con una actividad cuyo CPI es no evaluable verifica que el CPI consolidado, calculado desde los totales, sí puede ser evaluable.
+Pruebas de contrato verifican contra `evm-fixture.json` los resultados esperados para los cinco estados del PRD §7.3 y un proyecto vacío: `null` en divisiones no evaluables, `CPI = 0` con `EV = 0` y `AC > 0`, `SPI = 0` con `EV = 0` y `PV > 0`, presencia estable y respuesta exitosa. También comprueban que una actividad con CPI no evaluable no impide un CPI consolidado evaluable desde los totales.

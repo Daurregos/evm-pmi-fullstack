@@ -29,4 +29,4 @@ La persistencia conserva únicamente los datos fuente del proyecto y sus activid
 
 ## Verificación
 
-Una revisión del modelo de persistencia confirma que no contiene PV, EV, CV, SV, CPI, SPI, EAC, VAC, interpretaciones ni consolidados. Pruebas de integración modifican BAC, avance planificado, avance real y AC para comprobar los cambios derivados correspondientes; editar el nombre conserva los indicadores y ninguna operación escribe resultados calculados.
+Una revisión del modelo de persistencia confirma que no contiene PV, EV, CV, SV, CPI, SPI, EAC, VAC, interpretaciones, consolidados ni el estado derivado de actividad —sin iniciar, sin avance con plan vigente, avance con AC cero, costo sin avance o avance con costo—. Pruebas de integración verifican contra `evm-fixture.json` los resultados esperados al modificar BAC, avance planificado, avance real y AC; editar el nombre conserva los indicadores y ninguna operación escribe resultados calculados.

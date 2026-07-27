@@ -31,4 +31,4 @@ La persistencia trata Proyecto–Actividad como una composición y garantiza que
 
 ## Verificación
 
-Pruebas de integración crean un proyecto con varias actividades, eliminan el proyecto y comprueban la ausencia de ambos y de huérfanos; otra prueba provoca una falla después de iniciar el borrado y comprueba que, por la reversión, el proyecto y todas sus actividades permanecen. Otro caso elimina una actividad y verifica que el proyecto y sus actividades hermanas permanecen. Una revisión del modelo confirma que la integridad no depende de llamadas manuales de consumidores.
+Pruebas de integración verifican contra `evm-fixture.json` los resultados esperados: crean un proyecto con varias actividades, eliminan el proyecto y comprueban la ausencia de ambos y de huérfanos; otra prueba provoca una falla después de iniciar el borrado y comprueba que, por la reversión, el proyecto y todas sus actividades permanecen. Otro caso elimina una actividad y verifica que el proyecto y sus actividades hermanas permanecen. Una revisión del modelo confirma que la integridad no depende de llamadas manuales de consumidores.
