@@ -8,7 +8,7 @@
 
 ## Contexto
 
-El PRD §5 establece una fecha de corte por proyecto que rige sus actividades; §§8 y 10 resuelven el producto como una fotografía y dejan el historial fuera de alcance. Aunque conservar cortes permitiría auditoría, tendencias y curva S, la aplicación tiene un usuario concurrente, decenas de actividades y tiempo limitado. Debe fijarse si una edición reemplaza la observación vigente o crea una nueva versión temporal.
+El PRD §5 establece una fecha de corte por proyecto que rige sus actividades; §§8 y 10 resuelven el producto como una fotografía y dejan el historial fuera de alcance. Aunque conservar cortes permitiría auditoría, tendencias y curva S, la aplicación pequeña tiene un usuario concurrente, decenas de actividades y tiempo limitado. Debe fijarse si una edición reemplaza la observación vigente o crea una nueva versión temporal.
 
 ## Decisión
 
