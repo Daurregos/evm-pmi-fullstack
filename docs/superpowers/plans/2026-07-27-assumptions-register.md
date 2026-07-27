@@ -36,29 +36,44 @@ Expected: occurrences from §2, §3, §4, §5, RF-01, RF-02, RF-03, RF-05, RF-06
 
 - [ ] **Step 2: Normalize repeated decisions without dropping origins.**
 
-Use these row groups as the completeness checklist:
+Use these normalized decision groups as the completeness checklist. The inventory has 34 groups; split a group further if an exact [S] sentence expresses more than one independent decision, but do not create new rows for the trace-only clauses noted below:
 
-1. Several projects exist, with one selected for dashboard analysis.
-2. Portfolio management, authentication, permissions, lifecycle states, report history/recovery, dependencies, calendars, resources, baselines, billing and detailed schedules are outside scope.
-3. One project cutoff date governs all its activities; the current project is a single photo rather than a period history.
-4. The main actor is the project leader and no other actor is contemplated.
-5. BAC for the project is the sum of activity BAC values.
-6. Existing activities participate even when planned work has not started; no captured activity lifecycle state controls inclusion.
-7. Deleting a project physically deletes its activities.
-8. Deleting the selected project leaves the dashboard without a selection even if other projects remain.
-9. The dashboard recalculates only after an edit is confirmed, and a confirmed row refresh does not reload the page.
-10. Neutral-band interpretation uses the inclusive fixed range 0.99–1.01.
-11. The visual state has only unfavorable, neutral and favorable levels; an unevaluable indicator is shown with the neutral visual treatment.
-12. With zero PV and positive EV, the product may show «avance anticipado» separately from SPI.
-13. The consolidated view counts activities with positive EV and zero AC, warning of possible cost-recording lag without declaring invalid data.
-14. Amounts and indices display two decimals, progress displays an integer percentage, nearest rounding is used, and exact ties round away from zero.
-15. Classification and visual state use the unrounded index.
-16. A marker \`<\` or \`>\` is used only when an out-of-band index displays exactly 0.99 or 1.01 and would otherwise hide the boundary crossing.
-17. Invalid input identifies the field and violated rule and leaves the previous state unchanged.
-18. Name and cutoff date are required; BAC is positive; AC is non-negative; both progress percentages are inclusive from 0% to 100%.
-19. Completion is verifiable by a third party without knowing technical decisions.
-20. The S-curve is the most diagnostically valuable future chart, requires period history, and is documented as an evolution path rather than an accidental omission.
-21. The neutral band is fixed and non-configurable; the dashboard analyzes one project at a time.
+1. Creating or editing a project updates that project.
+2. Several projects may exist.
+3. One project is selected for dashboard analysis at a time, and selection changes the analyzed view.
+4. Portfolio management, authentication, permissions, lifecycle states, report history/recovery, dependencies, calendars, resources, baselines, billing and detailed schedules are outside scope.
+5. One project cutoff date governs all its activities.
+6. The current project is a single mutable photo rather than a period history.
+7. The project leader is the only contemplated actor.
+8. BAC for the project is the sum of activity BAC values.
+9. Existing activities participate even when planned work has not started.
+10. No captured activity lifecycle state controls inclusion in the analysis.
+11. Deleting a project physically deletes its activities.
+12. Deleting the selected project leaves the dashboard without a selection even if other projects remain.
+13. The dashboard recalculates only after an edit is confirmed, not during digitization.
+14. A confirmed row refresh updates the row without reloading the page.
+15. Neutral-band interpretation uses the inclusive range 0.99–1.01.
+16. The visual state has only unfavorable, neutral and favorable levels.
+17. An unevaluable indicator receives the neutral visual treatment.
+18. With zero PV and positive EV, the product may show «avance anticipado» separately from SPI.
+19. The consolidated view counts activities with positive EV and zero AC.
+20. Positive EV with zero AC may indicate pending cost recording; the case is not declared invalid and is never favorable in cost.
+21. Amounts and indices display two decimals, while progress displays an integer percentage.
+22. Presented values use nearest rounding.
+23. Exact rounding ties are resolved away from zero.
+24. Classification and visual state use the unrounded index.
+25. A marker < or > is used only when an out-of-band index displays exactly 0.99 or 1.01 and would otherwise hide the boundary crossing.
+26. Invalid input identifies the field and violated rule and leaves the previous state unchanged.
+27. The name is required.
+28. The project cutoff date is required.
+29. BAC is positive.
+30. AC is non-negative.
+31. Both progress percentages are inclusive from 0% to 100%.
+32. Completion is verifiable by a third party without knowing technical decisions.
+33. The S-curve is the most diagnostically valuable future chart, requires period history, and is documented as an evolution path rather than an accidental omission.
+34. The behavior described can be validated without additional interpretation.
+
+The fixed/non-configurable band in §10 is an additional trace of item 15, not a new row. The one-project-at-a-time statement in §10 is an additional trace of item 3, not a new row. The five derived activity cases mentioned by RF-08 remain origins for the visual-state and edge-case rows above rather than becoming an extra technical rule.
 
 - [ ] **Step 3: Assign \`Resuelto en\` without inference.**
 
@@ -72,7 +87,17 @@ multiple projects with one selected -> ADR-006a
 recalculation on edit confirmation -> ADR-007
 \`\`\`
 
-For other rows, use an ADR only where its decision explicitly absorbs the assumption (for example, rounding/classification in ADR-003 and temporal single-photo consequences in ADR-005); otherwise write \`—\`.
+For the remaining rows, the only permitted ADR mappings are:
+
+```text
+presentation, classification, rounding or the neutral band -> ADR-003
+unevaluable indicator with neutral visual treatment -> ADR-004
+single photo or history consequences -> ADR-005
+count of activities with unrecorded cost -> ADR-006b
+row update without page reload -> ADR-007
+```
+
+Use an allowed ADR only where its decision explicitly absorbs that exact assumption; otherwise write \`—\`. In particular, the fixed/non-configurable band and one-project-at-a-time clauses inherit the traces above and do not create additional ADR mappings.
 
 ### Task 2: Write the assumptions document
 
@@ -91,7 +116,7 @@ incluidas las que aparecen fuera de §8, y registra su trazabilidad a los ADR.
 
 | Supuesto | Origen | Justificación | Impacto si resulta falso | Resuelto en |
 |---|---|---|---|---|
-La tabla continúa con las 21 decisiones normalizadas de Task 1.
+La tabla continúa con las 34 decisiones normalizadas de Task 1, o con más filas si Step 1 separó decisiones independientes adicionales.
 
 ## Supuestos con mayor riesgo
 
@@ -102,7 +127,7 @@ La tabla continúa con las 21 decisiones normalizadas de Task 1.
 
 - [ ] **Step 2: Keep the table faithful to the PRD.**
 
-Use section references such as \`§2\`, \`§3\`, \`RF-01\`, \`§7.4\` and \`§10\`; preserve the PRD wording for existing justifications and impacts; do not reproduce formulas, derived rules, acceptance examples, facts marked \`[E]\`, or derivations marked \`[D]\`.
+Use section references such as \`§2\`, \`§3\`, \`RF-01\`, \`§7.4\` and \`§10\`; preserve only text marked \`[S]\` from the PRD. When a PRD justification is marked \`[D]\`, paraphrase only the assumption it supports and do not reproduce the derivation. Do not reproduce formulas, derived rules, acceptance examples, facts marked \`[E]\`, or derivations marked \`[D]\`.
 
 - [ ] **Step 3: Check the explicit ADR mapping.**
 
@@ -121,7 +146,7 @@ Run:
 rg -n '\\[S\\]' docs/PRD.md
 \`\`\`
 
-Compare every occurrence against a row in \`docs/ASSUMPTIONS.md\`; repeated decisions may map to one row, but no decision may be absent.
+Compare every occurrence against the normalized inventory from Task 1 and a row in \`docs/ASSUMPTIONS.md\`; repeated decisions may map to one row, trace-only clauses must point to their existing row, and no independent decision may be absent.
 
 - [ ] **Step 2: Verify prohibited content and document shape.**
 
