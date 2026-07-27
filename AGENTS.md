@@ -11,7 +11,7 @@ Antes de cambiar el producto, revisa las fuentes aplicables en este orden:
 3. OpenSpec: mantiene la propuesta, las especificaciones, el SDD y las tareas del cambio activo.
 4. Código, pruebas y evidencia: materializan y verifican el comportamiento aprobado.
 
-No resuelvas silenciosamente contradicciones en el código. Corrige o escala primero el artefacto responsable. Evita copiar contenido entre niveles; enlaza la fuente canónica. Si el trabajo sobre un ADR revela una ambigüedad o cambia un comportamiento visible, actualiza primero `docs/PRD.md`; después alinea el ADR y sus artefactos dependientes. Tras modificar una fuente superior, audita explícitamente sus dependientes, incluido este `AGENTS.md` y OpenSpec cuando exista un cambio activo.
+No resuelvas silenciosamente contradicciones en el código. Corrige o escala primero el artefacto responsable. Evita copiar contenido entre niveles; enlaza la fuente canónica. Si el trabajo sobre un ADR revela una ambigüedad de producto o cambia un comportamiento visible, actualiza primero `docs/PRD.md`; después alinea el ADR y sus artefactos dependientes. Tras modificar una fuente superior, audita explícitamente sus dependientes, incluido este `AGENTS.md` y OpenSpec cuando exista un cambio activo.
 
 ## Required change workflow
 
@@ -79,7 +79,7 @@ Usa los comandos reales del proyecto para pruebas, lint y build. Para cambios do
 git diff --check
 ```
 
-`git diff --check` no inspecciona archivos nuevos aún no rastreados. Antes de verificar uno, usa `git add -N <ruta-exacta>` o una alternativa que lo incluya efectivamente sin incorporar contenido ajeno.
+`git diff --check` no inspecciona archivos nuevos aún no rastreados. Antes de verificar uno, usa `git add -N -- 'ruta/real-del-archivo.md'`, sustituyendo el ejemplo por la ruta exacta, o una alternativa que lo incluya efectivamente sin incorporar contenido ajeno. Los planes escriben la ruta concreta en todo comando prescrito para ejecución literal.
 
 Antes del cierre:
 

@@ -17,13 +17,13 @@ Actualizar `AGENTS.md` para que los cambios dedicados exclusivamente a crear o m
 
 ## Jerarquía y consistencia documental
 
-- Si el trabajo sobre un ADR revela una ambigüedad o cambia comportamiento visible, se actualiza primero `docs/PRD.md`; después se alinean el ADR y los artefactos dependientes.
+- Si el trabajo sobre un ADR revela una ambigüedad de producto o cambia un comportamiento visible, se actualiza primero `docs/PRD.md`; después se alinean el ADR y los artefactos dependientes.
 - Tras cambiar una fuente superior, se auditan explícitamente sus dependientes, incluido `AGENTS.md` y OpenSpec cuando exista un cambio activo.
 - Los planes no reproducen el texto completo de PRD o ADR. Referencian la ruta canónica, describen cambios concretos y definen criterios de aceptación verificables.
 
 ## Verificación y disciplina de Git
 
-- `git diff --check` no se considera suficiente para un archivo nuevo todavía no rastreado. Antes de comprobarlo se usa `git add -N <ruta-exacta>` o una alternativa que incluya efectivamente el archivo.
+- `git diff --check` no se considera suficiente para un archivo nuevo todavía no rastreado. Antes de comprobarlo se usa `git add -N -- 'ruta/real-del-archivo.md'`, sustituyendo el ejemplo por la ruta exacta, o una alternativa que incluya efectivamente el archivo sin incorporar contenido ajeno. Los planes prescriben rutas concretas para su ejecución literal.
 - Los comandos prescritos por un plan se ejecutan literalmente antes del cierre; el reporte de otro agente no sustituye evidencia propia.
 - Las correcciones menores realizadas durante la revisión de una rama aún no publicada se consolidan en commits lógicos. Solo se conservan versiones separadas cuando su comparación aporta trazabilidad.
 - La verificación final confirma requisitos contra el diff, alcance de cada commit, estado del PR y cambios locales preservados.

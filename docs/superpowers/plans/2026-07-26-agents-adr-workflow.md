@@ -23,17 +23,17 @@ Run:
 ```bash
 rg -n '^## (Scope and source of truth|Required change workflow|GitFlow and worktrees|Verification and handoff)$' AGENTS.md
 rg -n 'Crea o actualiza el cambio con OpenSpec|Los planes de Superpowers|Mantén commits pequeños|git diff --check' AGENTS.md
-! rg -q 'ADR-only' AGENTS.md
+! rg -qF 'Un cambio dedicado exclusivamente a crear o actualizar ADR no crea, actualiza, aplica ni archiva artefactos OpenSpec.' AGENTS.md
 ```
 
-Expected: the four target sections and existing rules are found; `ADR-only` is absent.
+Expected: the four target sections and existing rules are found; the dedicated ADR-only exception is still absent.
 
 - [ ] **Step 2: Add source-of-truth propagation**
 
 In `Scope and source of truth`, extend the paragraph after the ordered source list with these rules:
 
 ```markdown
-Si el trabajo sobre un ADR revela una ambigüedad o cambia un comportamiento visible, actualiza primero `docs/PRD.md`; después alinea el ADR y sus artefactos dependientes. Tras modificar una fuente superior, audita explícitamente sus dependientes, incluido este `AGENTS.md` y OpenSpec cuando exista un cambio activo.
+Si el trabajo sobre un ADR revela una ambigüedad de producto o cambia un comportamiento visible, actualiza primero `docs/PRD.md`; después alinea el ADR y sus artefactos dependientes. Tras modificar una fuente superior, audita explícitamente sus dependientes, incluido este `AGENTS.md` y OpenSpec cuando exista un cambio activo.
 ```
 
 Keep the existing prohibition against silently resolving contradictions and the instruction to link rather than copy canonical content.
@@ -73,7 +73,7 @@ Do not authorize rewriting published history or force-pushing.
 In `Verification and handoff`, immediately after the documentary `git diff --check` example, add:
 
 ```markdown
-`git diff --check` no inspecciona archivos nuevos aún no rastreados. Antes de verificar uno, usa `git add -N <ruta-exacta>` o una alternativa que lo incluya efectivamente sin incorporar contenido ajeno.
+`git diff --check` no inspecciona archivos nuevos aún no rastreados. Antes de verificar uno, usa `git add -N -- 'ruta/real-del-archivo.md'`, sustituyendo el ejemplo por la ruta exacta, o una alternativa que lo incluya efectivamente sin incorporar contenido ajeno. Los planes escriben la ruta concreta en todo comando prescrito para ejecución literal.
 ```
 
 Extend the closure checklist so it requires executing prescribed commands literally. Keep the existing rule that another agent's report is not evidence.
@@ -87,7 +87,10 @@ rg -qF 'Un cambio dedicado exclusivamente a crear o actualizar ADR no crea, actu
 rg -qF 'Si un ADR surge dentro de un cambio OpenSpec activo' AGENTS.md
 rg -qF 'Los planes referencian las rutas canónicas de PRD y ADR' AGENTS.md
 rg -qF 'no crees un commit por cada microajuste' AGENTS.md
-rg -qF '`git diff --check` no inspecciona archivos nuevos aún no rastreados.' AGENTS.md
+rg -qF 'git add -N --' AGENTS.md
+rg -qF 'ruta/real-del-archivo.md' AGENTS.md
+rg -qF 'Los planes escriben la ruta concreta en todo comando prescrito para ejecución literal.' AGENTS.md
+rg -qF 'revela una ambigüedad de producto o cambia un comportamiento visible' AGENTS.md
 rg -qF 'incluido este `AGENTS.md` y OpenSpec cuando exista un cambio activo' AGENTS.md
 rg -qF 'Ejecuta literalmente los comandos prescritos' AGENTS.md
 git diff --check -- AGENTS.md
@@ -134,7 +137,11 @@ Run:
 git diff --check origin/develop...HEAD
 rg -qF 'Un cambio dedicado exclusivamente a crear o actualizar ADR no crea, actualiza, aplica ni archiva artefactos OpenSpec.' AGENTS.md
 rg -qF 'Si un ADR surge dentro de un cambio OpenSpec activo' AGENTS.md
-rg -qF '`git diff --check` no inspecciona archivos nuevos aún no rastreados.' AGENTS.md
+rg -qF 'revela una ambigüedad de producto o cambia un comportamiento visible' AGENTS.md
+rg -qF 'revela una ambigüedad de producto o cambia un comportamiento visible' docs/superpowers/specs/2026-07-26-agents-adr-workflow-design.md
+rg -qF 'revela una ambigüedad de producto o cambia un comportamiento visible' docs/superpowers/plans/2026-07-26-agents-adr-workflow.md
+rg -qF "git add -N -- 'ruta/real-del-archivo.md'" AGENTS.md
+rg -qF 'Los planes escriben la ruta concreta en todo comando prescrito para ejecución literal.' AGENTS.md
 git log --oneline --decorate origin/develop..HEAD
 git status --short --branch
 ```
