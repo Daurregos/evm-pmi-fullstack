@@ -24,3 +24,15 @@ y deben retirarse cuando Next.js fije versiones corregidas.
 `scripts/verify-decimal.mjs` es una sonda de viabilidad independiente, ya
 satisfecha y excluida de pruebas y CI. Se archivará o eliminará en el primer
 slice de fase 1, cuando el dominio cubra el fixture, los empates y el viaje JSON.
+
+Las reglas de fronteras de imports y de uso decimal quedaron aisladas en
+`chore/phase-0-lint-rules-wip` (`ed0107f`). Por prioridad de tiempo no forman
+parte todavía de `npm test` ni de CI; deben retomarse antes de cerrar la fase 0.
+
+El workflow actual cubre instalación reproducible, migración, tipos y las
+pruebas estructurales, de integración y de contrato con PostgreSQL. El paso de
+lint se añadirá al recuperar la rama anterior.
+
+`npm audit` de producción no reporta vulnerabilidades. Permanecen avisos en
+herramientas de desarrollo transitivas de Drizzle Kit y ESLint cuyo arreglo
+automático exige cambios incompatibles.
