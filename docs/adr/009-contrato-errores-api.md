@@ -12,9 +12,13 @@ RF-02 y el PRD §7.5 exigen rechazar entradas inválidas, identificar el campo y
 
 Una escritura JSON sintácticamente correcta que incumple el PRD §7.5 devuelve `422 Unprocessable Content`.
 
-`400 Bad Request` queda reservado para contenido sintácticamente inválido.
+`400 Bad Request` cubre JSON malformado y JSON bien formado con un valor de tipo incompatible con el esquema de escritura de ADR-006b.
+
+Un `null` explícito en un campo obligatorio se trata como ausencia de valor: devuelve `422` con `rule: "required"`, no `400` por tipo incompatible.
 
 El `400` usa la misma envolvente con `code: "malformed_request"` y `violations: []`.
+
+Se clasifica como `400` porque el fallo pertenece a la interpretación del esquema de entrada, anterior a las reglas de negocio del PRD §7.5.
 
 La validación reporta todas las infracciones detectadas en la petición.
 
@@ -75,6 +79,7 @@ Logging y observabilidad quedan fuera de esta decisión.
 - El usuario puede corregir todos los campos afectados en un intento.
 - OpenAPI debe declarar la envolvente, sus enumerados y `violations`.
 - `400`, `404` y `422` comparten una forma. El consumidor necesita un único manejador de errores.
+- Los errores de sintaxis o deserialización no generan infracciones por campo ni amplían el conjunto cerrado de `rule`.
 - Acumular infracciones exige ejecutar todas las validaciones independientes.
 - El formato propio exige mantenimiento.
 - La localización futura exigiría revisar los mensajes en español.
@@ -83,4 +88,4 @@ Logging y observabilidad quedan fuera de esta decisión.
 
 ## Verificación
 
-Pruebas de contrato contrastan `evm-fixture.json`: cada `validationChecks` devuelve `422`, `field`, `rule`, mensaje humano y estado intacto. Un caso compuesto reúne todas las infracciones. `cpi` produce `read_only`. Otros casos cubren la forma `404` y excluyen excepciones, trazas o detalles del framework.
+Pruebas de contrato contrastan `evm-fixture.json`: cada `validationChecks` devuelve `422`, `field`, `rule`, mensaje humano y estado intacto. Un caso compuesto reúne todas las infracciones. `cpi` produce `read_only`. Una prueba adicional con `{"bac":"diez"}` devuelve `400`, `malformed_request`, `violations: []` y conserva el estado. Otros casos cubren la forma `404` y excluyen excepciones, trazas o detalles del framework.
