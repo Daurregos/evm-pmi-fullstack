@@ -17,10 +17,10 @@
 - [ ] 2.2 Configurar `eslint.config.mjs` con `no-restricted-imports` y
   `no-restricted-syntax` limitados a `src/`, y exponer `npm run lint` y
   `npm run lint:imports`.
-- [ ] 2.3 Crear `src/domain/decimal.ts` con la única configuración y función de
+- [x] 2.3 Crear `src/domain/decimal.ts` con la única configuración y función de
   presentación, y crear las firmas comentadas de magnitudes, actividad y
   proyecto sin cuerpos de cálculo.
-- [ ] 2.4 Crear una sola interfaz de repositorio en `src/application/` y los
+- [x] 2.4 Crear una sola interfaz de repositorio en `src/application/` y los
   tipos contractuales/códigos de error mínimos en `src/shared/`, sin DTOs
   duplicados ni puertos adicionales.
 - [ ] 2.5 Ejecutar literalmente `npm run lint`, `npm run lint:imports` y
@@ -64,22 +64,22 @@
 
 ## 6. Semilla
 
-- [ ] 6.1 Escribir primero una prueba de integración de la semilla que exija dos
+- [x] 6.1 Escribir primero una prueba de integración de la semilla que exija dos
   proyectos, ocho actividades, solo datos capturados e idempotencia.
-- [ ] 6.2 Implementar `scripts/seed.ts` proyectando únicamente los campos
+- [x] 6.2 Implementar `scripts/seed.ts` proyectando únicamente los campos
   aprobados, con upsert y ajuste de secuencias.
-- [ ] 6.3 Ejecutar literalmente `npm run db:seed` dos veces y confirmar mediante
+- [x] 6.3 Ejecutar literalmente `npm run db:seed` dos veces y confirmar mediante
   la prueba que no se duplican filas.
 
 ## 7. Operación y CI
 
-- [ ] 7.1 Crear los guiones ejecutables y scripts de `package.json` para
+- [x] 7.1 Crear los guiones ejecutables y scripts de `package.json` para
   `env:up`, `env:down`, migración, semilla, desarrollo, lint, imports, tipos y
   pruebas.
 - [ ] 7.2 Crear `.github/workflows/ci.yml` con PostgreSQL, instalación
   reproducible, migración, lint, imports, tipos y suite completa; excluir
   explícitamente la sonda.
-- [ ] 7.3 Probar literalmente `npm run env:down` seguido de `npm run env:up` y
+- [x] 7.3 Probar literalmente `npm run env:down` seguido de `npm run env:up` y
   confirmar colección, lectura individual y datos sembrados sin consultar
   instrucciones externas.
 
