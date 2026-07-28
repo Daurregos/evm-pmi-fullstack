@@ -14,7 +14,11 @@ Una escritura JSON sintácticamente correcta que incumple el PRD §7.5 devuelve 
 
 `400 Bad Request` cubre JSON malformado y JSON bien formado con un valor de tipo incompatible con el esquema de escritura de ADR-006b.
 
+La capa estructural comprueba sintaxis JSON y, en valores no nulos, tipos y formatos. Negocio comprueba obligatoriedad, restricciones numéricas, campos de lectura, propiedades desconocidas y nombres normalizados; sus infracciones producen `422`.
+
 Un `null` explícito en un campo obligatorio se trata como ausencia de valor: devuelve `422` con `rule: "required"`, no `400` por tipo incompatible.
+
+Por ello, los esquemas de petición admiten `null` en campos obligatorios y no cierran las propiedades antes de negocio. Esta permisividad distingue `required`, `read_only` y `unknown` sin validarlas para el dominio.
 
 El `400` usa la misma envolvente con `code: "malformed_request"` y `violations: []`.
 
@@ -28,6 +32,10 @@ Todo campo de solo lectura presente en una escritura se rechaza con `422`.
 
 Ningún campo de solo lectura se ignora.
 
+Una propiedad ajena a los esquemas de escritura y lectura se rechaza con `422`, conserva su nombre en `field` y produce `rule: "unknown"`. No se ignora.
+
+Se recortan los espacios laterales de `name` antes de validar y persistir. Un nombre compuesto solo por espacios queda vacío e incumple `required`; los interiores se conservan.
+
 El cuerpo JSON contiene `code`, `message` y `violations`.
 
 `code` es un enumerado estable en inglés.
@@ -36,7 +44,7 @@ El cuerpo JSON contiene `code`, `message` y `violations`.
 
 Cada elemento de `violations` contiene `field`, `rule` y `message`.
 
-`field` usa el nombre `lowerCamelCase` exacto de ADR-006b.
+`field` usa el nombre `lowerCamelCase` exacto de ADR-006b para campos conocidos; una propiedad desconocida conserva el nombre recibido.
 
 `rule` es un enumerado estable en inglés.
 
@@ -54,7 +62,7 @@ También muestra `message`.
 
 La infracción se trata como validación genérica sin fallar.
 
-Las reglas iniciales son `required`, `positive`, `non_negative`, `range_0_100` y `read_only`.
+Las reglas iniciales son `required`, `positive`, `non_negative`, `range_0_100`, `read_only` y `unknown`.
 
 ```json
 {"code":"validation_failed","message":"La entrada contiene errores.",
@@ -73,6 +81,8 @@ Logging y observabilidad quedan fuera de esta decisión.
 - **RFC 9457 con una extensión de validación:** sería adecuada para una API pública, pero añade tipos URI y miembros innecesarios aquí.
 - **`400` para toda entrada inválida:** reduciría códigos, pero mezclaría sintaxis incorrecta con contenido semánticamente inválido.
 - **Reportar solo la primera infracción:** simplificaría el recorrido de validación, pero obligaría al usuario a repetir ciclos de corrección.
+- **Esquema estricto como barrera automática:** describiría entradas válidas, pero adelantaría `400` a los `422` de negocio.
+- **Ignorar propiedades desconocidas o preservar espacios laterales:** toleraría imprecisiones, pero ocultaría errores y nombres sin contenido.
 
 ## Consecuencias
 
@@ -85,7 +95,11 @@ Logging y observabilidad quedan fuera de esta decisión.
 - La localización futura exigiría revisar los mensajes en español.
 - Validaciones costosas o dependientes obligarían a reconsiderar la acumulación.
 - Varios consumidores externos o una exigencia de interoperabilidad obligarían a reconsiderar RFC 9457.
+- El esquema publicado es menos restrictivo que las reglas reales. Un cliente generado no debe equiparar nulabilidad o propiedades adicionales con validez de negocio.
+- Un validador automático debe reservar `400` para sintaxis, tipo y formato, y dejar pasar o mapear las demás infracciones a la envolvente `422` de este ADR.
+- Añadir `unknown` al conjunto cerrado de `rule` no es compatible hacia atrás.
+- Recortar espacios laterales puede persistir un nombre distinto del recibido.
 
 ## Verificación
 
-Pruebas de contrato contrastan `contracts/evm/evm-fixture.json`: cada `validationChecks` devuelve `422`, `field`, `rule`, mensaje humano y estado intacto. Un caso compuesto reúne todas las infracciones. `cpi` produce `read_only`. Una prueba adicional con `{"bac":"diez"}` devuelve `400`, `malformed_request`, `violations: []` y conserva el estado. Otros casos cubren la forma `404` y excluyen excepciones, trazas o detalles del framework.
+Pruebas de contrato contrastan `contracts/evm/evm-fixture.json`: cada `validationChecks` devuelve `422`, `field`, `rule`, mensaje humano y estado intacto. Casos nuevos cubren ausencia y `null` de cada campo obligatorio, una propiedad desconocida con `unknown`, campos de lectura con `read_only` y nombres con espacios laterales o solo espacios. Un caso compuesto acumula infracciones. Una prueba con `{"bac":"diez"}` devuelve `400`, `malformed_request`, `violations: []` y conserva el estado. Otros casos cubren `404` y excluyen detalles internos.
