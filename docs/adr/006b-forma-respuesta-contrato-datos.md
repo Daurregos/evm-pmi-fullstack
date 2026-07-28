@@ -14,7 +14,9 @@ ADR-006a fija una lectura con proyecto, actividades y consolidado. ADR-003 exige
 
 Los nombres usan inglés en `lowerCamelCase`. Los acrónimos EVM conservan minúsculas exactas.
 
-La envolvente heredada de ADR-006a denomina sus bloques `project`, `activities` y `summary`. `project` contiene `id`, `name` y `cutoffDate`. Cada actividad leída contiene `id`, `name`, `bac`, `plannedProgress`, `actualProgress`, `ac`, `pv`, `ev`, `cv`, `sv`, `cpi`, `spi`, `eac` y `vac`. `summary` contiene `bac`, `pv`, `ev`, `ac`, `cv`, `sv`, `cpi`, `spi`, `eac`, `vac`, `progress` y `activitiesWithUnimputedCost`.
+La envolvente heredada de ADR-006a denomina sus bloques `project`, `activities` y `summary`. `project` contiene `id`, `name` y `cutoffDate`. Cada actividad leída contiene `id`, `name`, `bac`, `plannedProgress`, `actualProgress`, `ac`, `pv`, `ev`, `cv`, `sv`, `cpi`, `spi`, `eac` y `vac`. `summary` contiene `bac`, `pv`, `ev`, `ac`, `cv`, `sv`, `cpi`, `spi`, `eac`, `vac`, `progress` y `activitiesWithEvAndZeroAc`.
+
+Los identificadores de proyecto y actividad son enteros tanto en los campos `id` de las representaciones como en los parámetros `projectId` y `activityId` de las rutas definidas por ADR-006a.
 
 Los porcentajes cruzan el API entre 0 y 100. El backend los convierte a la fracción interna de ADR-003.
 
@@ -43,6 +45,7 @@ La escritura de actividad usa un objeto distinto con `name`, `bac`, `plannedProg
 - La respuesta contiene dos formas de indicador: `cpi` y `spi` son objetos con valor, presentación e interpretación, mientras los otros seis son escalares. El consumidor maneja ambas formas porque solo CPI y SPI tienen banda y marcador.
 - Un requisito futuro de varios idiomas obligaría a revisar si `label` sigue viajando desde el backend o se deriva en el cliente desde `status`.
 - Los consumidores pueden observar aproximaciones binarias. Un intercambio financiero exacto obligaría a revisar el uso de números JSON.
+- Los identificadores son secuenciales y, por tanto, adivinables y enumerables. Esto sería inaceptable en un recurso expuesto públicamente, pero resulta irrelevante en una herramienta interna sin control de acceso.
 
 ## Verificación
 
