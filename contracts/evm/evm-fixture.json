@@ -1,0 +1,803 @@
+{
+  "$comment": "Fixture canónico EVM. Fuente de verdad numérica y de forma del contrato. Verificado con aritmética decimal exacta.",
+  "version": "4.0.0",
+  "$metadataConvention": "Toda clave con prefijo '$' es metadato del fixture, no parte del contrato. Eliminando recursivamente las claves con '$' de readResponse se obtiene el payload literal de GET /projects/{projectId} según ADR-006b. Los bloques neutralBandChecks, validationChecks y errorEnvelopes no son ejemplos del payload de éxito: son aserciones focalizadas.",
+  "$changelog": "v4.0.0 añade la actividad a8, la única con status 'neutral' en ambos índices, de modo que la semilla muestra los cuatro estados y sirve como evidencia visual completa de RF-08. El consolidado y negativeChecks cambian en consecuencia. v3.4.x corrigió cadenas de metadatos y afirmaciones de FIXTURE.md. v3.0.0 aplanó las actividades para que readResponse sea el payload literal. v2.0.0 convirtió cpi y spi de escalar a objeto.",
+  "$displayRule": "cpi.display y spi.display son el valor redondeado a 2 decimales con coma decimal, SALVO que el redondeo lo proyecte sobre un límite de la banda inclusiva 0,99-1,01 ocultando que el valor completo está fuera: entonces se antepone '<0,99' o '>1,01' (RF-05, ADR-003). Los empates exactos se resuelven alejándose de cero. Un índice no evaluable lleva value y display en null, status 'not_evaluable' y label 'no evaluable'. Los objetos cpi y spi siempre están presentes; nunca son null ellos mismos. Los montos nunca llevan marcador.",
+  "$wirePrecision": "Los montos, progress, cpi.value y spi.value cruzan el API sin redondear (ADR-006b). Lo único ya presentado que cruza son cpi.display y spi.display, porque la regla del marcador es lógica de negocio y no formato; el redondeo de los montos lo aplica el frontend al mostrarlos.",
+  "writeSchema": {
+    "$comment": "RF-02: el cuerpo de escritura de una actividad lleva solo los cinco datos capturados. 'id' y los ocho indicadores son de solo lectura y su presencia en una escritura debe rechazarse.",
+    "fields": [
+      "name",
+      "bac",
+      "plannedProgress",
+      "actualProgress",
+      "ac"
+    ]
+  },
+  "readResponse": {
+    "$comment": "Payload literal de GET /projects/{projectId} una vez eliminadas las claves con prefijo '$'. ADR-006a: una sola lectura abastece tabla, consolidado y gráfica.",
+    "project": {
+      "id": 1,
+      "name": "Proyecto de referencia",
+      "cutoffDate": "2026-06-30"
+    },
+    "activities": [
+      {
+        "$id": "a1",
+        "$state": "AVANCE_CON_COSTO",
+        "id": 1,
+        "name": "Actividad con avance y costo, favorable",
+        "bac": 10000.0,
+        "plannedProgress": 40.0,
+        "actualProgress": 50.0,
+        "ac": 4000.0,
+        "pv": 4000.0,
+        "ev": 5000.0,
+        "cv": 1000.0,
+        "sv": 1000.0,
+        "cpi": {
+          "value": 1.25,
+          "display": "1,25",
+          "status": "favorable",
+          "label": "eficiente en costos"
+        },
+        "spi": {
+          "value": 1.25,
+          "display": "1,25",
+          "status": "favorable",
+          "label": "adelantado"
+        },
+        "eac": 8000.0,
+        "vac": 2000.0
+      },
+      {
+        "$id": "a2",
+        "$state": "AVANCE_CON_COSTO",
+        "$trap": "cpi.value real 0,761904…: eac debe calcularse con el valor sin redondear. Usar cpi.display (0,76) da 26315,79 en lugar de 26250,00.",
+        "id": 2,
+        "name": "Actividad con avance y costo, desfavorable",
+        "bac": 20000.0,
+        "plannedProgress": 60.0,
+        "actualProgress": 40.0,
+        "ac": 10500.0,
+        "pv": 12000.0,
+        "ev": 8000.0,
+        "cv": -2500.0,
+        "sv": -4000.0,
+        "cpi": {
+          "value": 0.7619047619047619,
+          "display": "0,76",
+          "status": "unfavorable",
+          "label": "sobre presupuesto"
+        },
+        "spi": {
+          "value": 0.6666666666666666,
+          "display": "0,67",
+          "status": "unfavorable",
+          "label": "atrasado"
+        },
+        "eac": 26250.0,
+        "vac": -6250.0
+      },
+      {
+        "$id": "a3",
+        "$state": "COSTO_SIN_AVANCE",
+        "$trap": "cpi.value = 0 es un valor DEFINIDO y desfavorable, con status 'unfavorable'. Solo eac y vac quedan en null. No confundir con not_evaluable.",
+        "id": 3,
+        "name": "Actividad con costo y sin avance",
+        "bac": 5000.0,
+        "plannedProgress": 20.0,
+        "actualProgress": 0.0,
+        "ac": 1500.0,
+        "pv": 1000.0,
+        "ev": 0.0,
+        "cv": -1500.0,
+        "sv": -1000.0,
+        "cpi": {
+          "value": 0.0,
+          "display": "0,00",
+          "status": "unfavorable",
+          "label": "sobre presupuesto"
+        },
+        "spi": {
+          "value": 0.0,
+          "display": "0,00",
+          "status": "unfavorable",
+          "label": "atrasado"
+        },
+        "eac": null,
+        "vac": null
+      },
+      {
+        "$id": "a4",
+        "$state": "AVANCE_CON_AC_CERO",
+        "$trap": "cv = +2400 parece favorable, pero cpi.status es 'not_evaluable' (PRD §7.2: la interpretación se deriva de CPI, nunca de CV). Nunca se reporta como favorable en costo.",
+        "id": 4,
+        "name": "Actividad con avance y AC cero",
+        "bac": 8000.0,
+        "plannedProgress": 25.0,
+        "actualProgress": 30.0,
+        "ac": 0.0,
+        "pv": 2000.0,
+        "ev": 2400.0,
+        "cv": 2400.0,
+        "sv": 400.0,
+        "cpi": {
+          "value": null,
+          "display": null,
+          "status": "not_evaluable",
+          "label": "no evaluable"
+        },
+        "spi": {
+          "value": 1.2,
+          "display": "1,20",
+          "status": "favorable",
+          "label": "adelantado"
+        },
+        "eac": null,
+        "vac": null
+      },
+      {
+        "$id": "a5",
+        "$state": "SIN_INICIAR",
+        "$trap": "Aporta 3000 al bac del summary y 0 a pv/ev/ac. Excluirla cambia el progress del proyecto (PRD §7.1).",
+        "id": 5,
+        "name": "Actividad sin iniciar",
+        "bac": 3000.0,
+        "plannedProgress": 0.0,
+        "actualProgress": 0.0,
+        "ac": 0.0,
+        "pv": 0.0,
+        "ev": 0.0,
+        "cv": 0.0,
+        "sv": 0.0,
+        "cpi": {
+          "value": null,
+          "display": null,
+          "status": "not_evaluable",
+          "label": "no evaluable"
+        },
+        "spi": {
+          "value": null,
+          "display": null,
+          "status": "not_evaluable",
+          "label": "no evaluable"
+        },
+        "eac": null,
+        "vac": null
+      },
+      {
+        "$id": "a6",
+        "$state": "SIN_AVANCE_CON_PLAN_VIGENTE",
+        "$trap": "Estados mixtos en la misma actividad: spi.status 'unfavorable' y cpi.status 'not_evaluable'. cv = 0 no significa 'en presupuesto'.",
+        "id": 6,
+        "name": "Actividad sin avance con plan vigente",
+        "bac": 6000.0,
+        "plannedProgress": 50.0,
+        "actualProgress": 0.0,
+        "ac": 0.0,
+        "pv": 3000.0,
+        "ev": 0.0,
+        "cv": 0.0,
+        "sv": -3000.0,
+        "cpi": {
+          "value": null,
+          "display": null,
+          "status": "not_evaluable",
+          "label": "no evaluable"
+        },
+        "spi": {
+          "value": 0.0,
+          "display": "0,00",
+          "status": "unfavorable",
+          "label": "atrasado"
+        },
+        "eac": null,
+        "vac": null
+      },
+      {
+        "$id": "a7",
+        "$state": "AVANCE_CON_COSTO",
+        "$trap": "Combinación inversa a a4: CPI evaluable y SPI no evaluable, porque pv = 0. Dos comprobaciones adicionales: (1) cpi.value = 0,625 es un empate exacto y se presenta como 0,63, alejándose de cero (PRD §7.4); (2) sv = +1000 con pv = 0 es el caso del que PUEDE derivarse «avance anticipado» (PRD §7.3 y RF-08). Esa información es opcional, se basa en sv positivo y NO se expresa clasificando spi como favorable: spi.status permanece 'not_evaluable'. El contrato no lleva campo propio para ella.",
+        "id": 7,
+        "name": "Actividad con avance y costo, sin plan a la fecha",
+        "bac": 4000.0,
+        "plannedProgress": 0.0,
+        "actualProgress": 25.0,
+        "ac": 1600.0,
+        "pv": 0.0,
+        "ev": 1000.0,
+        "cv": -600.0,
+        "sv": 1000.0,
+        "cpi": {
+          "value": 0.625,
+          "display": "0,63",
+          "status": "unfavorable",
+          "label": "sobre presupuesto"
+        },
+        "spi": {
+          "value": null,
+          "display": null,
+          "status": "not_evaluable",
+          "label": "no evaluable"
+        },
+        "eac": 6400.0,
+        "vac": -2400.0
+      },
+      {
+        "$id": "a8",
+        "$state": "AVANCE_CON_COSTO",
+        "$trap": "Única actividad con status 'neutral' en ambos índices, y la que hace que la semilla muestre los cuatro estados. cpi.value es 0,995024…, dentro de la banda inclusiva sin ser exactamente 1: comprueba que la tolerancia se aplica de verdad y no solo al valor unitario. Segunda trampa: cv = -30 es negativo y aun así el estado de costo es 'neutral', porque la interpretación se deriva de CPI y no de CV (PRD §7.2).",
+        "id": 8,
+        "name": "Actividad con avance y costo, conforme al plan",
+        "bac": 12000.0,
+        "plannedProgress": 50.0,
+        "actualProgress": 50.0,
+        "ac": 6030.0,
+        "pv": 6000.0,
+        "ev": 6000.0,
+        "cv": -30.0,
+        "sv": 0.0,
+        "cpi": {
+          "value": 0.9950248756218906,
+          "display": "1,00",
+          "status": "neutral",
+          "label": "en presupuesto"
+        },
+        "spi": {
+          "value": 1.0,
+          "display": "1,00",
+          "status": "neutral",
+          "label": "en cronograma"
+        },
+        "eac": 12060.0,
+        "vac": -60.0
+      }
+    ],
+    "summary": {
+      "bac": 68000.0,
+      "pv": 28000.0,
+      "ev": 22400.0,
+      "ac": 23630.0,
+      "cv": -1230.0,
+      "sv": -5600.0,
+      "cpi": {
+        "value": 0.9479475243334744,
+        "display": "0,95",
+        "status": "unfavorable",
+        "label": "sobre presupuesto"
+      },
+      "spi": {
+        "value": 0.8,
+        "display": "0,80",
+        "status": "unfavorable",
+        "label": "atrasado"
+      },
+      "eac": 71733.92857142857,
+      "vac": -3733.9285714285716,
+      "progress": 32.94117647058823,
+      "activitiesWithEvAndZeroAc": 1
+    }
+  },
+  "negativeChecks": {
+    "$comment": "Valores que produce una implementación INCORRECTA. Ningún test debe arrojarlos.",
+    "cpiAsAverageOfIndices": 0.73,
+    "eacAsSumOfActivityEacs": 52710.0,
+    "eacFromRoundedCpi": 71578.95,
+    "cpiExcludingZeroAcActivity": 0.85,
+    "$notes": [
+      "cpiAsAverageOfIndices: promediar los cinco cpi.value definidos da 0,73 en lugar de 0,9479. Viola RF-04.",
+      "eacAsSumOfActivityEacs: sumar los eac de actividades da 52710,00 en lugar de 71733,93. El eac del summary es bac_total / cpi_total.",
+      "eacFromRoundedCpi: usar cpi.display (0,95) en lugar de cpi.value da 71578,95. El redondeo es solo de presentación (PRD §7.4).",
+      "cpiExcludingZeroAcActivity: excluir a4 de la consolidación da 0,85. El tratamiento EVM correcto la incluye, y por eso el summary publica activitiesWithEvAndZeroAc (PRD §7.3)."
+    ]
+  },
+  "emptyProject": {
+    "$comment": "Caso borde del PRD §7.1: proyecto sin actividades.",
+    "project": {
+      "id": 2,
+      "name": "Proyecto sin actividades",
+      "cutoffDate": "2026-06-30"
+    },
+    "activities": [],
+    "summary": {
+      "bac": 0,
+      "pv": 0,
+      "ev": 0,
+      "ac": 0,
+      "cv": 0,
+      "sv": 0,
+      "cpi": {
+        "value": null,
+        "display": null,
+        "status": "not_evaluable",
+        "label": "no evaluable"
+      },
+      "spi": {
+        "value": null,
+        "display": null,
+        "status": "not_evaluable",
+        "label": "no evaluable"
+      },
+      "eac": null,
+      "vac": null,
+      "progress": null,
+      "activitiesWithEvAndZeroAc": 0
+    }
+  },
+  "neutralBandChecks": {
+    "$comment": "Aserciones focalizadas, no ejemplos de payload. Verifican que la clasificación se evalúa sobre cpi.value / spi.value SIN redondear y que los marcadores aparecen solo cuando el redondeo oculta que el valor está fuera de la banda inclusiva. Construidos en PARES DE CONTRASTE: B1 y B2 redondean ambos a 0,99; B4 y B5 redondean ambos a 1,01; dentro de cada par el status es opuesto. Sin la regla del marcador su display sería idéntico, y el marcador es exactamente lo que hace visible la diferencia. B6 y B7 repiten el ejercicio sobre spi. B1-B5: plannedProgress = actualProgress, de modo que spi es 1,00 y solo varía cpi. B6-B7: ac = ev, de modo que cpi es 1,00 y solo varía spi.",
+    "cases": [
+      {
+        "$id": "B1",
+        "$input": {
+          "bac": 2000,
+          "plannedProgress": 49.45,
+          "actualProgress": 49.45,
+          "ac": 1000
+        },
+        "$expected": {
+          "cpi": {
+            "value": 0.989,
+            "display": "<0,99",
+            "status": "unfavorable",
+            "label": "sobre presupuesto"
+          },
+          "spi": {
+            "value": 1.0,
+            "display": "1,00",
+            "status": "neutral",
+            "label": "en cronograma"
+          }
+        },
+        "$trap": "cpi.value real 0,989: redondea a 0,99 (dentro de la banda) pero el valor está fuera."
+      },
+      {
+        "$id": "B2",
+        "$input": {
+          "bac": 2000,
+          "plannedProgress": 49.5,
+          "actualProgress": 49.5,
+          "ac": 1000
+        },
+        "$expected": {
+          "cpi": {
+            "value": 0.99,
+            "display": "0,99",
+            "status": "neutral",
+            "label": "en presupuesto"
+          },
+          "spi": {
+            "value": 1.0,
+            "display": "1,00",
+            "status": "neutral",
+            "label": "en cronograma"
+          }
+        },
+        "$trap": "cpi.value real 0,99 exacto. Límite inferior INCLUSIVE. Par de contraste de B1: ambos redondean a 0,99 y tienen status opuesto. En display se distinguen solo por el marcador: B1 muestra '<0,99' y B2 '0,99'."
+      },
+      {
+        "$id": "B3",
+        "$input": {
+          "bac": 2000,
+          "plannedProgress": 50.0,
+          "actualProgress": 50.0,
+          "ac": 1000
+        },
+        "$expected": {
+          "cpi": {
+            "value": 1.0,
+            "display": "1,00",
+            "status": "neutral",
+            "label": "en presupuesto"
+          },
+          "spi": {
+            "value": 1.0,
+            "display": "1,00",
+            "status": "neutral",
+            "label": "en cronograma"
+          }
+        }
+      },
+      {
+        "$id": "B4",
+        "$input": {
+          "bac": 2000,
+          "plannedProgress": 50.5,
+          "actualProgress": 50.5,
+          "ac": 1000
+        },
+        "$expected": {
+          "cpi": {
+            "value": 1.01,
+            "display": "1,01",
+            "status": "neutral",
+            "label": "en presupuesto"
+          },
+          "spi": {
+            "value": 1.0,
+            "display": "1,00",
+            "status": "neutral",
+            "label": "en cronograma"
+          }
+        },
+        "$trap": "cpi.value real 1,01 exacto. Límite superior INCLUSIVE."
+      },
+      {
+        "$id": "B5",
+        "$input": {
+          "bac": 2000,
+          "plannedProgress": 50.55,
+          "actualProgress": 50.55,
+          "ac": 1000
+        },
+        "$expected": {
+          "cpi": {
+            "value": 1.011,
+            "display": ">1,01",
+            "status": "favorable",
+            "label": "eficiente en costos"
+          },
+          "spi": {
+            "value": 1.0,
+            "display": "1,00",
+            "status": "neutral",
+            "label": "en cronograma"
+          }
+        },
+        "$trap": "cpi.value real 1,011. Par de contraste de B4: ambos redondean a 1,01 y tienen status opuesto. En display se distinguen solo por el marcador: B4 muestra '1,01' y B5 '>1,01'."
+      },
+      {
+        "$id": "B6",
+        "$input": {
+          "bac": 2000,
+          "plannedProgress": 50,
+          "actualProgress": 49.45,
+          "ac": 989
+        },
+        "$expected": {
+          "spi": {
+            "value": 0.989,
+            "display": "<0,99",
+            "status": "unfavorable",
+            "label": "atrasado"
+          },
+          "cpi": {
+            "value": 1.0,
+            "display": "1,00",
+            "status": "neutral",
+            "label": "en presupuesto"
+          }
+        },
+        "$trap": "El marcador aplica a spi igual que a cpi, con la etiqueta de cronograma y no la de costo."
+      },
+      {
+        "$id": "B7",
+        "$input": {
+          "bac": 2000,
+          "plannedProgress": 50,
+          "actualProgress": 50.55,
+          "ac": 1011
+        },
+        "$expected": {
+          "spi": {
+            "value": 1.011,
+            "display": ">1,01",
+            "status": "favorable",
+            "label": "adelantado"
+          },
+          "cpi": {
+            "value": 1.0,
+            "display": "1,00",
+            "status": "neutral",
+            "label": "en presupuesto"
+          }
+        },
+        "$trap": "Par superior de B6 sobre spi."
+      }
+    ]
+  },
+  "validationChecks": {
+    "$comment": "Aserciones de error, no ejemplos de payload de éxito. Cada caso envía una petición y espera un 422 con el cuerpo completo de ADR-009. Los casos V1-V8 aíslan una regla cada uno; V9 las acumula.",
+    "$messageAssertion": "Los textos de 'message' son ILUSTRATIVOS. Las pruebas aseveran 'code', 'field', 'rule' y la PRESENCIA de 'message' —que ADR-009 declara obligatorio—, nunca su redacción exacta: ADR-009 establece que los consumidores automatizan sobre los enumerados y no sobre el texto humano.",
+    "$stateIntact": "El PRD §7.5 y ADR-009 exigen que una petición rechazada no altere el estado previo. Se verifica sembrando readResponse, enviando la petición del caso, releyendo GET /projects/{projectId} y comprobando que la respuesta es idéntica a readResponse. El fixture aporta el estado antes y después; la comparación es de la prueba.",
+    "$nullNote": "V2 envía cutoffDate: null y espera 422 con rule 'required'. ADR-009 lo decide expresamente: un null explícito en un campo obligatorio se trata como ausencia de valor, no como tipo incompatible, de modo que produce 422 y no 400.",
+    "$orderNote": "El orden de los elementos de 'violations' no se asevera en ningún caso.",
+    "cases": [
+      {
+        "$id": "V1",
+        "$rule": "required",
+        "$source": "PRD §7.5",
+        "resource": "project",
+        "request": {
+          "name": "",
+          "cutoffDate": "2026-06-30"
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "name",
+              "rule": "required",
+              "message": "Es obligatorio."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V2",
+        "$rule": "required",
+        "$source": "PRD §7.5",
+        "resource": "project",
+        "request": {
+          "name": "Proyecto",
+          "cutoffDate": null
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "cutoffDate",
+              "rule": "required",
+              "message": "Es obligatorio."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V3",
+        "$rule": "required",
+        "$source": "PRD §7.5",
+        "resource": "activity",
+        "request": {
+          "name": "",
+          "bac": 1000,
+          "plannedProgress": 50,
+          "actualProgress": 40,
+          "ac": 500
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "name",
+              "rule": "required",
+              "message": "Es obligatorio."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V4",
+        "$rule": "positive",
+        "$source": "PRD §7.5",
+        "resource": "activity",
+        "request": {
+          "name": "Actividad",
+          "bac": 0,
+          "plannedProgress": 50,
+          "actualProgress": 40,
+          "ac": 500
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "bac",
+              "rule": "positive",
+              "message": "Debe ser positivo."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V5",
+        "$rule": "non_negative",
+        "$source": "PRD §7.5",
+        "resource": "activity",
+        "request": {
+          "name": "Actividad",
+          "bac": 1000,
+          "plannedProgress": 50,
+          "actualProgress": 40,
+          "ac": -1
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "ac",
+              "rule": "non_negative",
+              "message": "No puede ser negativo."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V6",
+        "$rule": "range_0_100",
+        "$source": "PRD §7.5",
+        "resource": "activity",
+        "request": {
+          "name": "Actividad",
+          "bac": 1000,
+          "plannedProgress": 101,
+          "actualProgress": 40,
+          "ac": 500
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "plannedProgress",
+              "rule": "range_0_100",
+              "message": "Debe estar entre 0 y 100."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V7",
+        "$rule": "range_0_100",
+        "$source": "PRD §7.5",
+        "resource": "activity",
+        "request": {
+          "name": "Actividad",
+          "bac": 1000,
+          "plannedProgress": 50,
+          "actualProgress": -0.1,
+          "ac": 500
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "actualProgress",
+              "rule": "range_0_100",
+              "message": "Debe estar entre 0 y 100."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V8",
+        "$rule": "read_only",
+        "$source": "RF-02; ADR-006b; ADR-009",
+        "$trap": "Muchos frameworks ignoran en silencio los campos no reconocidos. ADR-009 exige rechazar.",
+        "resource": "activity",
+        "request": {
+          "name": "Actividad",
+          "bac": 1000,
+          "plannedProgress": 50,
+          "actualProgress": 40,
+          "ac": 500,
+          "cpi": 1.5
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "cpi",
+              "rule": "read_only",
+              "message": "Es un campo de solo lectura y no se admite en una escritura."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V9",
+        "$rule": "compuesto",
+        "$source": "ADR-009",
+        "$trap": "Caso compuesto: infringe las cinco reglas en una sola petición. Verifica que la validación ACUMULA y no se detiene en la primera. El orden de 'violations' no se asevera.",
+        "resource": "activity",
+        "request": {
+          "name": "",
+          "bac": 0,
+          "plannedProgress": 101,
+          "actualProgress": -0.1,
+          "ac": -1,
+          "cpi": 1.5
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "name",
+              "rule": "required",
+              "message": "Es obligatorio."
+            },
+            {
+              "field": "bac",
+              "rule": "positive",
+              "message": "Debe ser positivo."
+            },
+            {
+              "field": "plannedProgress",
+              "rule": "range_0_100",
+              "message": "Debe estar entre 0 y 100."
+            },
+            {
+              "field": "actualProgress",
+              "rule": "range_0_100",
+              "message": "Debe estar entre 0 y 100."
+            },
+            {
+              "field": "ac",
+              "rule": "non_negative",
+              "message": "No puede ser negativo."
+            },
+            {
+              "field": "cpi",
+              "rule": "read_only",
+              "message": "Es un campo de solo lectura y no se admite en una escritura."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "errorEnvelopes": {
+    "$comment": "ADR-009: los tres códigos de error comparten una sola envolvente, de modo que el consumidor necesita un único manejador. Los textos de 'message' son ilustrativos y no se aseveran; sí se asevera su presencia.",
+    "malformedRequest": {
+      "$when": "Cuerpo sintácticamente inválido, o JSON bien formado con un valor de tipo incompatible con el esquema de escritura de ADR-006b. ADR-009 clasifica ambos como 400 porque el fallo pertenece a la interpretación del esquema de entrada, anterior a las reglas de negocio del PRD §7.5.",
+      "$exampleRequest": {
+        "name": "Actividad",
+        "bac": "diez",
+        "plannedProgress": 50,
+        "actualProgress": 40,
+        "ac": 500
+      },
+      "$note": "Los errores de sintaxis o deserialización NO generan infracciones por campo: violations queda vacío y el conjunto cerrado de 'rule' no se amplía (ADR-009).",
+      "expectedStatus": 400,
+      "expectedBody": {
+        "code": "malformed_request",
+        "message": "La petición no pudo interpretarse.",
+        "violations": []
+      }
+    },
+    "notFound": {
+      "$when": "Proyecto o actividad inexistente, incluido un borrado repetido (ADR-006a).",
+      "expectedStatus": 404,
+      "expectedBody": {
+        "code": "not_found",
+        "message": "El recurso no existe.",
+        "violations": []
+      }
+    },
+    "validationFailed": {
+      "$when": "Cuerpo bien formado que incumple el PRD §7.5 o incluye un campo de solo lectura.",
+      "$note": "Ejemplo mínimo con una sola infracción. El catálogo completo está en validationChecks.",
+      "expectedStatus": 422,
+      "expectedBody": {
+        "code": "validation_failed",
+        "message": "La entrada contiene errores.",
+        "violations": [
+          {
+            "field": "bac",
+            "rule": "positive",
+            "message": "Debe ser positivo."
+          }
+        ]
+      }
+    }
+  }
+}

@@ -32,4 +32,4 @@ Cada proyecto conserva una única foto mutable identificada por su fecha de cort
 
 ## Verificación
 
-Pruebas de integración verifican los resultados esperados contra `evm-fixture.json` al editar la fecha de corte, el proyecto y sus actividades. Una revisión confirma la ausencia de fechas por actividad e historial.
+Pruebas de integración verifican los resultados esperados contra `contracts/evm/evm-fixture.json` al editar la fecha de corte, el proyecto y sus actividades. Una revisión confirma la ausencia de fechas por actividad e historial.

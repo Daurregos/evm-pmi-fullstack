@@ -31,4 +31,4 @@ Los montos usan decimal base diez. Los porcentajes se representan internamente c
 
 ## Verificación
 
-Pruebas unitarias y de integración verifican contra `evm-fixture.json` los resultados esperados de precisión, redondeo, presentación, clasificación y round-trips observables, sin decidir el contrato externo.
+Pruebas unitarias y de integración verifican contra `contracts/evm/evm-fixture.json` los resultados esperados de precisión, redondeo, presentación, clasificación y round-trips observables, sin decidir el contrato externo.
