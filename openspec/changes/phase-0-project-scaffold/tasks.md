@@ -11,19 +11,19 @@
 
 ## 2. Fronteras y módulo decimal
 
-- [ ] 2.1 Escribir pruebas estructurales o fixtures de lint que fallen para cada
+- [x] 2.1 Escribir pruebas estructurales o fixtures de lint que fallen para cada
   dirección de import prohibida y para llamadas decimales fuera del módulo
   autorizado.
-- [ ] 2.2 Configurar `eslint.config.mjs` con `no-restricted-imports` y
+- [x] 2.2 Configurar `eslint.config.mjs` con `no-restricted-imports` y
   `no-restricted-syntax` limitados a `src/`, y exponer `npm run lint` y
   `npm run lint:imports`.
-- [ ] 2.3 Crear `src/domain/decimal.ts` con la única configuración y función de
+- [x] 2.3 Crear `src/domain/decimal.ts` con la única configuración y función de
   presentación, y crear las firmas comentadas de magnitudes, actividad y
   proyecto sin cuerpos de cálculo.
-- [ ] 2.4 Crear una sola interfaz de repositorio en `src/application/` y los
+- [x] 2.4 Crear una sola interfaz de repositorio en `src/application/` y los
   tipos contractuales/códigos de error mínimos en `src/shared/`, sin DTOs
   duplicados ni puertos adicionales.
-- [ ] 2.5 Ejecutar literalmente `npm run lint`, `npm run lint:imports` y
+- [x] 2.5 Ejecutar literalmente `npm run lint`, `npm run lint:imports` y
   `npm run typecheck` y confirmar que inspeccionan `src/`.
 
 ## 3. PostgreSQL, Drizzle y migración
