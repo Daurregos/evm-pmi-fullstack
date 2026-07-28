@@ -53,13 +53,13 @@
 
 ## 5. Mock contractual
 
-- [ ] 5.1 Escribir primero en `tests/contract/` las pruebas HTTP para colección,
+- [x] 5.1 Escribir primero en `tests/contract/` las pruebas HTTP para colección,
   proyecto de referencia, proyecto vacío, limpieza recursiva de `$` y las tres
   envolventes de error.
-- [ ] 5.2 Implementar el lector/limpiador del fixture en infraestructura y los
+- [x] 5.2 Implementar el lector/limpiador del fixture en infraestructura y los
   route handlers mock delgados en `src/app/projects/`, sin rutas de escritura ni
   API real.
-- [ ] 5.3 Ejecutar las pruebas de contrato contra Next en un puerto de prueba y
+- [x] 5.3 Ejecutar las pruebas de contrato contra Next en un puerto de prueba y
   comprobar que todos los cuerpos proceden del fixture.
 
 ## 6. Semilla
