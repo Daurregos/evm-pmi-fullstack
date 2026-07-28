@@ -42,13 +42,13 @@
 
 ## 4. Repositorio y frontera decimal
 
-- [ ] 4.1 Escribir primero en `tests/integration/` la prueba de ida y vuelta que
+- [x] 4.1 Escribir primero en `tests/integration/` la prueba de ida y vuelta que
   inserta un monto decimal, lo relee desde PostgreSQL y exige igualdad del
   `Decimal` reconstruido.
-- [ ] 4.2 Implementar el mapeador explícito de cadenas `numeric` al constructor
+- [x] 4.2 Implementar el mapeador explícito de cadenas `numeric` al constructor
   configurado en dominio y la implementación Drizzle de la única interfaz de
   repositorio.
-- [ ] 4.3 Ejecutar la prueba de integración contra PostgreSQL real y comprobar
+- [x] 4.3 Ejecutar la prueba de integración contra PostgreSQL real y comprobar
   que la fila de base conserva la cadena decimal esperada.
 
 ## 5. Mock contractual
