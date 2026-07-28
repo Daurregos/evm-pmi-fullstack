@@ -88,4 +88,4 @@ Logging y observabilidad quedan fuera de esta decisión.
 
 ## Verificación
 
-Pruebas de contrato contrastan `evm-fixture.json`: cada `validationChecks` devuelve `422`, `field`, `rule`, mensaje humano y estado intacto. Un caso compuesto reúne todas las infracciones. `cpi` produce `read_only`. Una prueba adicional con `{"bac":"diez"}` devuelve `400`, `malformed_request`, `violations: []` y conserva el estado. Otros casos cubren la forma `404` y excluyen excepciones, trazas o detalles del framework.
+Pruebas de contrato contrastan `contracts/evm/evm-fixture.json`: cada `validationChecks` devuelve `422`, `field`, `rule`, mensaje humano y estado intacto. Un caso compuesto reúne todas las infracciones. `cpi` produce `read_only`. Una prueba adicional con `{"bac":"diez"}` devuelve `400`, `malformed_request`, `violations: []` y conserva el estado. Otros casos cubren la forma `404` y excluyen excepciones, trazas o detalles del framework.

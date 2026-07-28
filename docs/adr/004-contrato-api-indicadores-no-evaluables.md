@@ -31,4 +31,4 @@ La API mantiene cada indicador derivado en una respuesta exitosa y usa `null` ex
 
 ## Verificación
 
-Pruebas de contrato verifican contra `evm-fixture.json` los resultados esperados para los cinco estados del PRD §7.3 y un proyecto vacío: `null` en divisiones no evaluables, `CPI = 0` con `EV = 0` y `AC > 0`, `SPI = 0` con `EV = 0` y `PV > 0`, presencia estable y respuesta exitosa. También comprueban que una actividad con CPI no evaluable no impide un CPI consolidado evaluable desde los totales.
+Pruebas de contrato verifican contra `contracts/evm/evm-fixture.json` los resultados esperados para los cinco estados del PRD §7.3 y un proyecto vacío: `null` en divisiones no evaluables, `CPI = 0` con `EV = 0` y `AC > 0`, `SPI = 0` con `EV = 0` y `PV > 0`, presencia estable y respuesta exitosa. También comprueban que una actividad con CPI no evaluable no impide un CPI consolidado evaluable desde los totales.

@@ -8,7 +8,7 @@
 
 ## Contexto
 
-ADR-006a fija una lectura con proyecto, actividades y consolidado. ADR-003 exige precisión decimal interna y presentar CPI y SPI sin perder su clasificación. ADR-004 usa `null` para indicadores no evaluables. RF-02 limita la escritura a cinco datos. RF-06 exige leer trece campos de dominio por actividad. OpenAPI y `evm-fixture.json` necesitan una forma única.
+ADR-006a fija una lectura con proyecto, actividades y consolidado. ADR-003 exige precisión decimal interna y presentar CPI y SPI sin perder su clasificación. ADR-004 usa `null` para indicadores no evaluables. RF-02 limita la escritura a cinco datos. RF-06 exige leer trece campos de dominio por actividad. OpenAPI y `contracts/evm/evm-fixture.json` necesitan una forma única.
 
 ## Decisión
 
@@ -49,4 +49,4 @@ La escritura de actividad usa un objeto distinto con `name`, `bac`, `plannedProg
 
 ## Verificación
 
-Pruebas de contrato validan contra `evm-fixture.json` nombres, bloques, rango 0–100, tipos JSON y esquemas distintos. El fixture conserva para CPI y SPI el valor completo, `display`, `status` y `label` esperados. Los casos cubren actividad, consolidado, límites con y sin marcador y no evaluabilidad. Ningún monto lleva marcador.
+Pruebas de contrato validan contra `contracts/evm/evm-fixture.json` nombres, bloques, rango 0–100, tipos JSON y esquemas distintos. El fixture conserva para CPI y SPI el valor completo, `display`, `status` y `label` esperados. Los casos cubren actividad, consolidado, límites con y sin marcador y no evaluabilidad. Ningún monto lleva marcador.

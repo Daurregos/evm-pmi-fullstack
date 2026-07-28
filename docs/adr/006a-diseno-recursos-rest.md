@@ -44,4 +44,4 @@ Por delegación explícita, ADR-006b define nombres de campo, agrupación intern
 
 Pruebas de contrato verifican por sí mismas rutas anidadas, ausencia de rutas planas o de indicadores, selección por ruta y una lectura para tabla, consolidado y gráfica.
 
-`evm-fixture.json` verifica exclusivamente los valores del payload agregado. Pruebas de integración eliminan recursos existentes e inexistentes y comprueban la cascada de ADR-008 y `404 Not Found`, respectivamente.
+`contracts/evm/evm-fixture.json` verifica exclusivamente los valores del payload agregado. Pruebas de integración eliminan recursos existentes e inexistentes y comprueban la cascada de ADR-008 y `404 Not Found`, respectivamente.

@@ -31,4 +31,4 @@ La lógica de cálculo EVM reside en un único módulo de dominio del backend, i
 
 ## Verificación
 
-Pruebas unitarias y de integración verifican contra `evm-fixture.json` los resultados esperados del módulo de dominio y de los casos de uso. Una revisión de dependencias confirma que controladores, persistencia e interfaz no contienen fórmulas ni clasificación EVM duplicadas.
+Pruebas unitarias y de integración verifican contra `contracts/evm/evm-fixture.json` los resultados esperados del módulo de dominio y de los casos de uso. Una revisión de dependencias confirma que controladores, persistencia e interfaz no contienen fórmulas ni clasificación EVM duplicadas.

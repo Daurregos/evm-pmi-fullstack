@@ -59,7 +59,7 @@ No se calcula durante la digitación, conforme a RF-03.
 
 ## Verificación
 
-Pruebas de integración comparan con `evm-fixture.json` la lectura posterior a
+Pruebas de integración comparan con `contracts/evm/evm-fixture.json` la lectura posterior a
 crear, editar y eliminar actividades. Pruebas del cliente comprueban que ni la
 digitación ni una mutación rechazada solicitan la foto, que una exitosa sí y que
 un refresco fallido se reintenta sin repetir la escritura. Pruebas de contrato
