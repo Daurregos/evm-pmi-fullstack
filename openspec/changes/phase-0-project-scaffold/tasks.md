@@ -28,15 +28,15 @@
 
 ## 3. PostgreSQL, Drizzle y migración
 
-- [ ] 3.1 Crear `docker-compose.yml`, `drizzle.config.ts` y la configuración de
+- [x] 3.1 Crear `docker-compose.yml`, `drizzle.config.ts` y la configuración de
   conexión PostgreSQL con variables documentadas en `.env.example`.
-- [ ] 3.2 Escribir primero la prueba estructural que leerá
+- [x] 3.2 Escribir primero la prueba estructural que leerá
   `drizzle/0000_phase_0.sql` y exigirá dos tablas, cuatro
   `numeric(38,18)`, `ON DELETE CASCADE` y ausencia de columnas derivadas.
-- [ ] 3.3 Declarar el esquema de dos tablas en
+- [x] 3.3 Declarar el esquema de dos tablas en
   `src/infrastructure/database/schema.ts`, generar
   `drizzle/0000_phase_0.sql` con Drizzle Kit y revisar el SQL completo.
-- [ ] 3.4 Ejecutar literalmente `docker compose up -d --wait`,
+- [x] 3.4 Ejecutar literalmente `docker compose up -d --wait`,
   `npm run db:migrate` y la prueba estructural de
   `drizzle/0000_phase_0.sql`.
 
