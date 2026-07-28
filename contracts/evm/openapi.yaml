@@ -1,12 +1,32 @@
 openapi: 3.1.0
 info:
   title: Seguimiento de Valor Ganado
-  version: decision-pending
+  version: 1.0.0
   description: >-
-    Contrato del API EVM transcrito de las fuentes canónicas. La versión
-    documental está pendiente de decisión y se registra al final.
+    Contrato del API EVM transcrito de las fuentes canónicas. info.version
+    sigue SemVer para el contrato; no versiona las rutas.
 paths:
   /projects:
+    get:
+      operationId: listProjects
+      summary: Listar proyectos para el selector
+      description: >-
+        Devuelve un arreglo JSON desnudo con id y name por proyecto. Si no hay
+        proyectos, devuelve el arreglo vacío.
+      responses:
+        "200":
+          description: Proyectos disponibles para el selector.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectListItem"
+              examples:
+                projectCollection:
+                  $ref: "#/components/examples/ProjectCollection"
+                emptyProjectCollection:
+                  $ref: "#/components/examples/EmptyProjectCollection"
     post:
       operationId: createProject
       summary: Crear un proyecto
@@ -36,6 +56,35 @@ paths:
   /projects/{projectId}:
     parameters:
       - $ref: "#/components/parameters/ProjectId"
+    put:
+      operationId: replaceProject
+      summary: Reemplazar un proyecto
+      description: >-
+        Reemplaza todos los campos editables del proyecto. Un proyecto
+        inexistente responde 404 y no crea un recurso en esa URI, porque el
+        servidor asigna el identificador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectWrite"
+      responses:
+        "200":
+          description: Proyecto reemplazado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectRead"
+              examples:
+                referenceProject:
+                  $ref: "#/components/examples/ReferenceProject"
+        "400":
+          $ref: "#/components/responses/MalformedRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ProjectValidationFailed"
     get:
       operationId: getProject
       summary: Consultar la foto analítica de un proyecto
@@ -100,6 +149,35 @@ paths:
     parameters:
       - $ref: "#/components/parameters/ProjectId"
       - $ref: "#/components/parameters/ActivityId"
+    put:
+      operationId: replaceActivity
+      summary: Reemplazar una actividad
+      description: >-
+        Reemplaza los cinco datos capturados de la actividad. Una actividad o
+        su proyecto inexistentes responden 404 y no crean un recurso en esa
+        URI, porque el servidor asigna el identificador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityWrite"
+      responses:
+        "200":
+          description: Actividad reemplazada con sus indicadores recalculados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityRead"
+              examples:
+                referenceActivity:
+                  $ref: "#/components/examples/ReferenceActivity"
+        "400":
+          $ref: "#/components/responses/MalformedRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ActivityValidationFailed"
     delete:
       operationId: deleteActivity
       summary: Eliminar una actividad
@@ -128,9 +206,30 @@ components:
       schema:
         type: integer
   schemas:
+    ProjectListItem:
+      type: object
+      additionalProperties: false
+      description: Proyecto mínimo disponible para el selector.
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          description: Identificador del proyecto.
+        name:
+          type: string
+          minLength: 1
+          description: Nombre normalizado del proyecto.
     ProjectWrite:
       type: object
-      description: Datos admitidos al crear o editar un proyecto.
+      description: >-
+        Datos admitidos al crear o reemplazar un proyecto. Por la consecuencia
+        declarada en ADR-009, el esquema publicado es menos restrictivo que las
+        reglas reales: admite null y propiedades adicionales para que negocio
+        distinga required, read_only y unknown. Un cliente generado no debe
+        equiparar nulabilidad ni propiedades adicionales con validez de
+        negocio.
       required:
         - name
         - cutoffDate
@@ -141,15 +240,20 @@ components:
             - "null"
           minLength: 1
           description: >-
-            Nombre obligatorio del proyecto. Un null explícito se interpreta
-            como ausencia y produce una infracción required.
+            Nombre obligatorio del proyecto. Se recortan los espacios laterales
+            antes de validar y persistir; un null o un resultado vacío produce
+            una infracción required.
         cutoffDate:
+          type:
+            - string
+            - "null"
+          format: date
           description: >-
-            Fecha de corte obligatoria. Su tipo y formato de cable están
-            pendientes de decisión; un valor null explícito produce una
-            infracción required.
+            Fecha de corte obligatoria como full-date de RFC 3339 con forma
+            YYYY-MM-DD. Un null explícito produce una infracción required.
     ProjectRead:
       type: object
+      additionalProperties: false
       description: Representación de lectura de un proyecto.
       required:
         - id
@@ -162,18 +266,26 @@ components:
         name:
           type: string
           minLength: 1
-          description: Nombre del proyecto.
+          description: Nombre normalizado del proyecto.
         cutoffDate:
-          description: >-
-            Fecha de corte del proyecto. Su tipo y formato de cable están
-            pendientes de decisión.
+          type: string
+          format: date
+          description: Fecha de corte del proyecto como full-date de RFC 3339.
     ActivityWrite:
       type: object
       description: >-
-        Los cinco únicos datos capturados de una actividad. La obligatoriedad
-        de los cuatro campos numéricos está pendiente de decisión.
+        Los cinco únicos datos capturados de una actividad. Por la consecuencia
+        declarada en ADR-009, el esquema publicado es menos restrictivo que las
+        reglas reales: admite null y propiedades adicionales para que negocio
+        distinga required, read_only y unknown. Un cliente generado no debe
+        equiparar nulabilidad ni propiedades adicionales con validez de
+        negocio.
       required:
         - name
+        - bac
+        - plannedProgress
+        - actualProgress
+        - ac
       properties:
         name:
           type:
@@ -181,28 +293,38 @@ components:
             - "null"
           minLength: 1
           description: >-
-            Nombre obligatorio de la actividad. Un null explícito se interpreta
-            como ausencia y produce una infracción required.
+            Nombre obligatorio de la actividad. Se recortan los espacios
+            laterales antes de validar y persistir; un null o un resultado vacío
+            produce una infracción required.
         bac:
-          type: number
+          type:
+            - number
+            - "null"
           exclusiveMinimum: 0
           description: Presupuesto total planificado; debe ser positivo.
         plannedProgress:
-          type: number
+          type:
+            - number
+            - "null"
           minimum: 0
           maximum: 100
           description: Avance planificado entre 0 y 100, inclusive.
         actualProgress:
-          type: number
+          type:
+            - number
+            - "null"
           minimum: 0
           maximum: 100
           description: Avance real entre 0 y 100, inclusive.
         ac:
-          type: number
+          type:
+            - number
+            - "null"
           minimum: 0
           description: Costo real incurrido; no puede ser negativo.
     ActivityRead:
       type: object
+      additionalProperties: false
       description: >-
         Representación de lectura de una actividad con datos capturados e
         indicadores derivados.
@@ -275,6 +397,7 @@ components:
           description: Variación al completar, o null si no es evaluable.
     ProjectSummary:
       type: object
+      additionalProperties: false
       description: >-
         Consolidado calculado después de sumar BAC, PV, EV y AC de todas las
         actividades.
@@ -337,6 +460,7 @@ components:
           description: Cantidad de actividades con EV mayor que cero y AC cero.
     ProjectAnalysis:
       type: object
+      additionalProperties: false
       description: Foto analítica completa del proyecto.
       required:
         - project
@@ -353,6 +477,7 @@ components:
           $ref: "#/components/schemas/ProjectSummary"
     IndexResult:
       type: object
+      additionalProperties: false
       description: >-
         Resultado de CPI o SPI. El objeto y sus cuatro miembros siempre están
         presentes; solo value y display son nulables cuando el índice no es
@@ -388,6 +513,7 @@ components:
           description: Interpretación en español legible por personas.
     Violation:
       type: object
+      additionalProperties: false
       description: Infracción de validación asociada con un campo.
       required:
         - field
@@ -396,7 +522,9 @@ components:
       properties:
         field:
           type: string
-          description: Nombre lowerCamelCase exacto del campo.
+          description: >-
+            Los campos conocidos usan el nombre lowerCamelCase canónico; una
+            propiedad desconocida conserva el nombre recibido.
         rule:
           type: string
           enum:
@@ -405,12 +533,14 @@ components:
             - non_negative
             - range_0_100
             - read_only
+            - unknown
           description: Regla estable y cerrada legible por máquina.
         message:
           type: string
           description: Texto en español que explica cómo corregir la infracción.
     Error:
       type: object
+      additionalProperties: false
       description: Envolvente única para los errores 400, 404 y 422.
       required:
         - code
@@ -460,10 +590,12 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
           examples:
-            nameRequired:
-              $ref: "#/components/examples/ProjectNameRequired"
-            cutoffDateRequired:
-              $ref: "#/components/examples/ProjectCutoffDateRequired"
+            validationV1:
+              $ref: "#/components/examples/ValidationV1"
+            validationV2:
+              $ref: "#/components/examples/ValidationV2"
+            validationV10:
+              $ref: "#/components/examples/ValidationV10"
     ActivityValidationFailed:
       description: La escritura de la actividad incumple reglas de validación.
       content:
@@ -471,10 +603,26 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
           examples:
-            validationFailed:
-              $ref: "#/components/examples/ValidationFailed"
-            compoundValidation:
-              $ref: "#/components/examples/ActivityValidationV9"
+            validationV3:
+              $ref: "#/components/examples/ValidationV3"
+            validationV4:
+              $ref: "#/components/examples/ValidationV4"
+            validationV5:
+              $ref: "#/components/examples/ValidationV5"
+            validationV6:
+              $ref: "#/components/examples/ValidationV6"
+            validationV7:
+              $ref: "#/components/examples/ValidationV7"
+            validationV8:
+              $ref: "#/components/examples/ValidationV8"
+            validationV9:
+              $ref: "#/components/examples/ValidationV9"
+            validationV11:
+              $ref: "#/components/examples/ValidationV11"
+            validationV12:
+              $ref: "#/components/examples/ValidationV12"
+            validationV13:
+              $ref: "#/components/examples/ValidationV13"
   examples:
     ReferenceProjectAnalysis:
       summary: Foto analítica literal del proyecto de referencia.
@@ -712,6 +860,16 @@ components:
           label: adelantado
         eac: 8000.0
         vac: 2000.0
+    ProjectCollection:
+      summary: Colección literal de proyectos para el selector.
+      value:
+        - id: 1
+          name: Proyecto de referencia
+        - id: 2
+          name: Proyecto sin actividades
+    EmptyProjectCollection:
+      summary: Colección literal sin proyectos.
+      value: []
     MalformedRequest:
       summary: Error literal de petición no interpretable.
       value:
@@ -724,17 +882,8 @@ components:
         code: not_found
         message: El recurso no existe.
         violations: []
-    ValidationFailed:
-      summary: Error literal mínimo de validación.
-      value:
-        code: validation_failed
-        message: La entrada contiene errores.
-        violations:
-          - field: bac
-            rule: positive
-            message: Debe ser positivo.
-    ProjectNameRequired:
-      summary: Error literal V1 de nombre de proyecto obligatorio.
+    ValidationV1:
+      summary: Error literal V1 de validación.
       value:
         code: validation_failed
         message: La entrada contiene errores.
@@ -742,8 +891,8 @@ components:
           - field: name
             rule: required
             message: Es obligatorio.
-    ProjectCutoffDateRequired:
-      summary: Error literal V2 de fecha de corte obligatoria.
+    ValidationV2:
+      summary: Error literal V2 de validación.
       value:
         code: validation_failed
         message: La entrada contiene errores.
@@ -751,7 +900,62 @@ components:
           - field: cutoffDate
             rule: required
             message: Es obligatorio.
-    ActivityValidationV9:
+    ValidationV3:
+      summary: Error literal V3 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: name
+            rule: required
+            message: Es obligatorio.
+    ValidationV4:
+      summary: Error literal V4 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: bac
+            rule: positive
+            message: Debe ser positivo.
+    ValidationV5:
+      summary: Error literal V5 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: ac
+            rule: non_negative
+            message: No puede ser negativo.
+    ValidationV6:
+      summary: Error literal V6 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: plannedProgress
+            rule: range_0_100
+            message: Debe estar entre 0 y 100.
+    ValidationV7:
+      summary: Error literal V7 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: actualProgress
+            rule: range_0_100
+            message: Debe estar entre 0 y 100.
+    ValidationV8:
+      summary: Error literal V8 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: cpi
+            rule: read_only
+            message: >-
+              Es un campo de solo lectura y no se admite en una escritura.
+    ValidationV9:
       summary: Error literal V9 con infracciones acumuladas.
       value:
         code: validation_failed
@@ -776,73 +980,42 @@ components:
             rule: read_only
             message: >-
               Es un campo de solo lectura y no se admite en una escritura.
-x-decisions-missing:
-  title: Decisiones faltantes
-  items:
-    - question: ¿Qué forma exacta devuelve GET /projects?
-      blockingReason: >-
-        ADR-006a decide que la operación abastece el selector, pero sin saber
-        si devuelve un arreglo desnudo o una envolvente no puede escribirse su
-        respuesta 200; por eso la operación queda fuera.
-      responsibleAdr: ADR-006b
-      fixtureHint: >-
-        Insinuación, no decisión: readResponse.project muestra la forma de un
-        proyecto individual, pero no la forma de la colección.
-    - question: >-
-        ¿Las ediciones de proyecto y actividad usan PUT o PATCH, y reemplazan
-        el recurso completo o aplican cambios parciales?
-      blockingReason: >-
-        Sin verbo ni semántica de actualización no pueden declararse las
-        operaciones, sus cuerpos obligatorios ni el significado de un campo
-        ausente; por eso las ediciones quedan fuera.
-      responsibleAdr: ADR-006a
-      fixtureHint: >-
-        Insinuación, no decisión: las peticiones de validationChecks contienen
-        formas completas, pero son casos de error y no ejemplos de edición.
-    - question: >-
-        ¿Son obligatorios bac, plannedProgress, actualProgress y ac en toda
-        escritura de actividad?
-      blockingReason: >-
-        PRD §7.5 fija sus rangos, pero solo declara expresamente obligatorios el
-        nombre y la fecha de corte; el required del esquema no puede incluir
-        los cuatro números sin esta decisión.
-      responsibleAdr: ADR-006b
-      fixtureHint: >-
-        Insinuación, no decisión: todas las peticiones de actividad del fixture
-        incluyen los cuatro campos numéricos.
-    - question: ¿Qué tipo y formato de cable tiene cutoffDate?
-      blockingReason: >-
-        ADR-006b enumera el campo, pero no decide si el contrato debe declararlo
-        como string con format date u otra representación; el esquema deja el
-        tipo y el formato sin restringir.
-      responsibleAdr: ADR-006b
-      fixtureHint: >-
-        Insinuación, no decisión: readResponse y V1/V2 usan cadenas con forma
-        YYYY-MM-DD.
-    - question: ¿Qué versión identifica este documento OpenAPI?
-      blockingReason: >-
-        info.version es obligatorio en OpenAPI 3.1, pero ninguna fuente decide
-        una versión del documento o del API. Se usa decision-pending solo para
-        mantener el YAML validable y no como versionado de rutas.
-      responsibleAdr: ADR-006a
-      fixtureHint: >-
-        Insinuación descartada como decisión: 4.0.0 identifica la versión del
-        fixture, no la del documento OpenAPI ni la del API.
-    - question: >-
-        ¿Cómo se tratan las propiedades de escritura desconocidas que no son
-        campos de solo lectura?
-      blockingReason: >-
-        ADR-009 obliga a rechazar campos de solo lectura con 422, pero no decide
-        si una propiedad arbitraria se ignora, se rechaza ni con qué código; el
-        esquema no fija additionalProperties.
-      responsibleAdr: ADR-009
-      fixtureHint: >-
-        Insinuación limitada, no decisión: V8 cubre cpi porque es de solo
-        lectura, pero no incluye una propiedad desconocida arbitraria.
-    - question: ¿Un nombre compuesto solo por espacios incumple required?
-      blockingReason: >-
-        El PRD y el fixture rechazan la cadena vacía, pero no deciden recorte ni
-        normalización de espacios; minLength 1 no puede resolver ese caso.
-      responsibleAdr: ADR-009
-      fixtureHint: >-
-        Sin insinuación: V1, V3 y V9 usan una cadena vacía y no cubren espacios.
+          - field: owner
+            rule: unknown
+            message: No pertenece al esquema de escritura.
+    ValidationV10:
+      summary: Error literal V10 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: cutoffDate
+            rule: required
+            message: Es obligatorio.
+    ValidationV11:
+      summary: Error literal V11 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: bac
+            rule: required
+            message: Es obligatorio.
+    ValidationV12:
+      summary: Error literal V12 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: owner
+            rule: unknown
+            message: No pertenece al esquema de escritura.
+    ValidationV13:
+      summary: Error literal V13 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: name
+            rule: required
+            message: Es obligatorio.
