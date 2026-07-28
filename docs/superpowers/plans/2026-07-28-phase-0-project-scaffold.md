@@ -6,7 +6,7 @@
 
 **Architecture:** El dominio solo expone la política decimal y firmas sin cuerpo; application define un repositorio único; infrastructure implementa PostgreSQL, mapeo, mock y semilla; App Router expone únicamente handlers mock. ESLint materializa las fronteras y las pruebas ejercitan PostgreSQL real y la superficie HTTP contra el fixture.
 
-**Tech Stack:** Node.js 22, npm, TypeScript 7, Next.js 16, React 19, decimal.js 10, Drizzle ORM/Kit, PostgreSQL 17, Docker Compose, ESLint 10, Node Test Runner y GitHub Actions.
+**Tech Stack:** Node.js 22, npm, TypeScript 5.9, Next.js 16, React 19, decimal.js 10, Drizzle ORM/Kit, PostgreSQL 17, Docker Compose, ESLint 9, Node Test Runner y GitHub Actions.
 
 ---
 
@@ -110,10 +110,14 @@ Escribir `package.json` con contenido exacto:
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "drizzle-kit": "0.31.10",
-    "eslint": "10.8.0",
+    "eslint": "9.39.4",
     "eslint-config-next": "16.2.12",
     "tsx": "4.23.1",
-    "typescript": "7.0.2"
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "postcss": "8.5.24",
+    "sharp": "0.35.3"
   }
 }
 ```
@@ -180,7 +184,8 @@ Actualizar `.gitignore` a:
 .worktrees/
 node_modules/
 .next/
-.env
+.env*
+!.env.example
 *.tsbuildinfo
 ```
 

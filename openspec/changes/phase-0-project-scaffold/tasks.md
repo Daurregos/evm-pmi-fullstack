@@ -1,12 +1,12 @@
 ## 1. Base reproducible y sonda
 
-- [ ] 1.1 Crear `package.json`, `package-lock.json`, `tsconfig.json`,
+- [x] 1.1 Crear `package.json`, `package-lock.json`, `tsconfig.json`,
   `next.config.ts`, `.env.example` y la estructura `src/` y `tests/` aprobada,
   sin páginas, componentes ni lógica EVM.
-- [ ] 1.2 Mover la sonda a `scripts/verify-decimal.mjs`, añadir únicamente la
+- [x] 1.2 Mover la sonda a `scripts/verify-decimal.mjs`, añadir únicamente la
   nota de ciclo de vida acordada y confirmar que no aparece en scripts de test o
   CI.
-- [ ] 1.3 Añadir a `README.md` la tabla de elecciones tecnológicas, la razón de
+- [x] 1.3 Añadir a `README.md` la tabla de elecciones tecnológicas, la razón de
   Drizzle y la deuda de retiro de la sonda en fase 1.
 
 ## 2. Fronteras y módulo decimal
