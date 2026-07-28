@@ -1,22 +1,4 @@
-# evm-api-contract Specification
-
-## Purpose
-
-Definir el contrato OpenAPI validable y trazable del API de proyectos,
-actividades, resultados EVM y errores, sin convertir el contrato en fuente de
-decisiones de producto o arquitectura.
-
-## Requirements
-### Requirement: Documento OpenAPI único y válido
-
-El entregable MUST ser un único archivo YAML en
-`contracts/evm/openapi.yaml`, MUST declarar `openapi: 3.1.0` y MUST validar
-contra el esquema de OpenAPI 3.1 con todas sus referencias resolubles.
-
-#### Scenario: Validación estructural
-
-- **WHEN** se valida `contracts/evm/openapi.yaml` contra OpenAPI 3.1
-- **THEN** el documento es válido y ninguna referencia queda sin resolver
+## ADDED Requirements
 
 ### Requirement: Versión SemVer del contrato
 
@@ -30,18 +12,25 @@ parámetro ni otra variante en las rutas.
 - **THEN** la versión es exactamente `1.0.0` y la descripción identifica SemVer
   como convención contractual
 
-### Requirement: Lenguaje y nombres contractuales
+### Requirement: Colección mínima de proyectos
 
-Los nombres de campo, enumerados y `operationId` MUST estar en inglés y
-conservar exactamente los nombres de ADR-006b y ADR-009. Los resúmenes,
-descripciones, etiquetas y demás textos dirigidos a personas MUST estar en
-español.
+`GET /projects` MUST responder `200` con un arreglo JSON desnudo. Cada elemento
+MUST contener únicamente `id` y `name`, y una colección sin proyectos MUST
+representarse como `[]`.
 
-#### Scenario: Auditoría de idioma y nombres
+#### Scenario: Colección con proyectos
 
-- **WHEN** se inspeccionan operaciones, esquemas y enumerados
-- **THEN** los identificadores de máquina coinciden con los ADR y los textos
-  humanos están en español
+- **WHEN** se consulta la colección del fixture v5.0.0
+- **THEN** el cuerpo coincide literalmente con
+  `collectionResponse.expectedBody`
+
+#### Scenario: Colección vacía
+
+- **WHEN** no existe ningún proyecto
+- **THEN** el cuerpo coincide literalmente con
+  `collectionResponse.empty.expectedBody`
+
+## MODIFIED Requirements
 
 ### Requirement: Superficie limitada por ADR-006a y ADR-007
 
@@ -89,24 +78,6 @@ URI, porque ADR-006a reserva al servidor la asignación de identificadores.
 
 - **WHEN** se inspecciona el borrado de un proyecto o actividad
 - **THEN** la operación devuelve `204` sin contenido
-
-### Requirement: Colección mínima de proyectos
-
-`GET /projects` MUST responder `200` con un arreglo JSON desnudo. Cada elemento
-MUST contener únicamente `id` y `name`, y una colección sin proyectos MUST
-representarse como `[]`.
-
-#### Scenario: Colección con proyectos
-
-- **WHEN** se consulta la colección del fixture v5.0.0
-- **THEN** el cuerpo coincide literalmente con
-  `collectionResponse.expectedBody`
-
-#### Scenario: Colección vacía
-
-- **WHEN** no existe ningún proyecto
-- **THEN** el cuerpo coincide literalmente con
-  `collectionResponse.empty.expectedBody`
 
 ### Requirement: Esquemas de escritura y lectura separados
 
@@ -273,14 +244,3 @@ pregunta concreta.
 
 - **WHEN** la auditoría encuentra una pregunta que ningún ADR responde
 - **THEN** el valor no se inventa y `x-decisions-missing` registra el hueco
-
-### Requirement: Ausencia de superficie inventada
-
-El contrato MUST NOT añadir rutas, parámetros de consulta, paginación, filtros,
-ordenamiento, versionado en rutas, autenticación, cabeceras, servidores ni
-campos ausentes de ADR-006b.
-
-#### Scenario: Auditoría negativa
-
-- **WHEN** se revisa la superficie completa del YAML
-- **THEN** no aparece ningún elemento prohibido o decidido por defecto
