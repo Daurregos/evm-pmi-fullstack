@@ -2,13 +2,13 @@
 
 Caso de referencia calculado a mano. Es la **fuente de verdad numérica y de forma** del proyecto: cualquier discrepancia entre el código y este documento es un defecto del código, no del fixture.
 
-Datos en `evm-fixture.json` (v4.0.0). Todos los valores fueron verificados con aritmética decimal exacta.
+Datos en `evm-fixture.json` (v5.0.0). Todos los valores fueron verificados con aritmética decimal exacta.
 
 ## Convención de metadatos
 
 Toda clave con prefijo `$` es metadato del fixture, no parte del contrato. Eliminando recursivamente las claves con `$` de `readResponse` se obtiene el **payload literal** de `GET /projects/{projectId}` según ADR-006b.
 
-`neutralBandChecks`, `validationChecks` y `errorEnvelopes` no son ejemplos del payload de éxito: son aserciones focalizadas. Dentro de ellas, las claves con `$` siguen siendo metadato y las demás describen la petición y la respuesta esperadas.
+`neutralBandChecks`, `validationChecks`, `errorEnvelopes`, `nameNormalization`, `collectionResponse` y `successResponses` no son ejemplos del payload de éxito: son aserciones focalizadas. Dentro de ellas, las claves con `$` siguen siendo metadato y las demás describen la petición y la respuesta esperadas.
 
 ## Diseño
 
@@ -129,8 +129,13 @@ En a7, además, `SV = +1.000` con `PV = 0` es el caso del que **puede** derivars
 
 - **`emptyProject`** — proyecto sin actividades: magnitudes en cero, índices en `not_evaluable`, `progress` en `null`.
 - **`neutralBandChecks`** — siete casos en **pares de contraste**: B1 y B2 redondean ambos a 0,99 y tienen `status` opuesto; B4 y B5 hacen lo mismo en 1,01. Dentro de cada par, lo único que los distingue en `display` es el marcador —`<0,99` frente a `0,99`, `1,01` frente a `>1,01`—; B6 y B7 repiten el ejercicio sobre `spi`, con etiquetas de cronograma. Si una implementación clasifica sobre el valor redondeado, cada par colapsa en un solo estado y fallan los cuatro casos a la vez.
-- **`writeSchema`** — los cinco campos admitidos en una escritura de actividad.
-- **`validationChecks`** — nueve casos alineados con ADR-009. Cada uno lleva la petición completa, el estado esperado (`422`) y el cuerpo de error con su `rule` enumerada. V1 a V8 aíslan una regla cada uno; **V9 es el caso compuesto**: infringe las cinco reglas en una sola petición y verifica que la validación **acumula** en lugar de detenerse en la primera. Los cuerpos esperados están completos, con el `message` que ADR-009 declara obligatorio. Las pruebas aseveran `code`, `field`, `rule` y la **presencia** de `message`, nunca su redacción exacta. El orden de `violations` tampoco se asevera.
+- **`writeSchemas`** — los cuerpos de escritura de proyecto (`name`, `cutoffDate`) y de actividad (los cinco datos capturados). Todos los campos son obligatorios en creación y en el reemplazo por `PUT`.
+- **`collectionResponse`** — el arreglo desnudo de `GET /projects`, con `{id, name}` por elemento, y el caso de colección vacía.
+- **`nameNormalization`** — el único caso de éxito sobre el recorte de espacios: los laterales desaparecen, los interiores se conservan.
+- **`successResponses`** — los códigos de éxito de cada operación y a qué forma ya presente en el fixture corresponde cada cuerpo. No duplica datos.
+- **`validationChecks`** — trece casos alineados con ADR-009. Cada uno lleva la petición completa, el estado esperado (`422`) y el cuerpo de error con su `rule` enumerada. V1 a V8 y V10 a V13 aíslan un comportamiento cada uno; **V9 es el caso compuesto**: infringe las seis reglas en una sola petición y verifica que la validación **acumula** en lugar de detenerse en la primera.
+
+  **El alcance es deliberado.** El bloque captura comportamientos distintos, no la combinatoria completa: no enumera la ausencia y el `null` de cada uno de los siete campos obligatorios —catorce casos para una sola regla—, sino un representante de cada forma (ausencia en V10, `null` en V2 y V11). El barrido por campo corresponde a una prueba parametrizada que recorra `writeSchemas`. Un fixture es un oráculo que se lee a mano; barrer combinatorias lo vuelve ilegible sin añadir señal. Los cuerpos esperados están completos, con el `message` que ADR-009 declara obligatorio. Las pruebas aseveran `code`, `field`, `rule` y la **presencia** de `message`, nunca su redacción exacta. El orden de `violations` tampoco se asevera.
 - **`errorEnvelopes`** — las tres formas de error de ADR-009: `400 malformed_request`, `404 not_found` y `422 validation_failed`. Comparten envolvente, así que el consumidor necesita un único manejador. El `400` cubre dos casos que ADR-009 agrupa deliberadamente: JSON malformado y JSON bien formado con un tipo incompatible, como `bac: "diez"`. Ambos fallan al interpretar el esquema de entrada, antes de que corran las reglas de negocio, y por eso ninguno genera infracciones por campo.
 
 **Cómo se verifica el «estado intacto».** El PRD §7.5 y ADR-009 exigen que una petición rechazada no altere nada. Se comprueba sembrando `readResponse`, enviando la petición del caso, releyendo y confirmando que la respuesta sigue siendo idéntica a `readResponse`. El fixture aporta el estado antes y después; la comparación la hace la prueba.
