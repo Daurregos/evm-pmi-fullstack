@@ -1,19 +1,28 @@
 {
   "$comment": "Fixture canónico EVM. Fuente de verdad numérica y de forma del contrato. Verificado con aritmética decimal exacta.",
-  "version": "4.0.0",
-  "$metadataConvention": "Toda clave con prefijo '$' es metadato del fixture, no parte del contrato. Eliminando recursivamente las claves con '$' de readResponse se obtiene el payload literal de GET /projects/{projectId} según ADR-006b. Los bloques neutralBandChecks, validationChecks y errorEnvelopes no son ejemplos del payload de éxito: son aserciones focalizadas.",
-  "$changelog": "v4.0.0 añade la actividad a8, la única con status 'neutral' en ambos índices, de modo que la semilla muestra los cuatro estados y sirve como evidencia visual completa de RF-08. El consolidado y negativeChecks cambian en consecuencia. v3.4.x corrigió cadenas de metadatos y afirmaciones de FIXTURE.md. v3.0.0 aplanó las actividades para que readResponse sea el payload literal. v2.0.0 convirtió cpi y spi de escalar a objeto.",
+  "version": "5.0.0",
+  "$metadataConvention": "Toda clave con prefijo '$' es metadato del fixture, no parte del contrato. Eliminando recursivamente las claves con '$' de readResponse se obtiene el payload literal de GET /projects/{projectId} según ADR-006b. Los bloques neutralBandChecks, validationChecks, errorEnvelopes, nameNormalization, collectionResponse y successResponses no son ejemplos del payload de éxito: son aserciones focalizadas.",
+  "$changelog": "v5.0.0 incorpora las decisiones de ADR-006a, ADR-006b y ADR-009 sobre PUT, colección de proyectos, esquemas de escritura, cutoffDate y reparto de validación: writeSchema pasa a writeSchemas con proyecto y actividad, el enumerado rule incorpora 'unknown', se añaden los casos V10 a V13, se amplía V9 y aparecen los bloques collectionResponse, nameNormalization y successResponses. v4.0.0 añade la actividad a8, la única con status 'neutral' en ambos índices, de modo que la semilla muestra los cuatro estados y sirve como evidencia visual completa de RF-08. El consolidado y negativeChecks cambian en consecuencia. v3.4.x corrigió cadenas de metadatos y afirmaciones de FIXTURE.md. v3.0.0 aplanó las actividades para que readResponse sea el payload literal. v2.0.0 convirtió cpi y spi de escalar a objeto.",
   "$displayRule": "cpi.display y spi.display son el valor redondeado a 2 decimales con coma decimal, SALVO que el redondeo lo proyecte sobre un límite de la banda inclusiva 0,99-1,01 ocultando que el valor completo está fuera: entonces se antepone '<0,99' o '>1,01' (RF-05, ADR-003). Los empates exactos se resuelven alejándose de cero. Un índice no evaluable lleva value y display en null, status 'not_evaluable' y label 'no evaluable'. Los objetos cpi y spi siempre están presentes; nunca son null ellos mismos. Los montos nunca llevan marcador.",
   "$wirePrecision": "Los montos, progress, cpi.value y spi.value cruzan el API sin redondear (ADR-006b). Lo único ya presentado que cruza son cpi.display y spi.display, porque la regla del marcador es lógica de negocio y no formato; el redondeo de los montos lo aplica el frontend al mostrarlos.",
-  "writeSchema": {
-    "$comment": "RF-02: el cuerpo de escritura de una actividad lleva solo los cinco datos capturados. 'id' y los ocho indicadores son de solo lectura y su presencia en una escritura debe rechazarse.",
-    "fields": [
-      "name",
-      "bac",
-      "plannedProgress",
-      "actualProgress",
-      "ac"
-    ]
+  "writeSchemas": {
+    "$comment": "ADR-006b: cuerpos de escritura. Todos los campos son obligatorios en creación y en el reemplazo por PUT; una ausencia o un null explícito producen 422 con rule 'required' (ADR-009). Ningún otro campo se admite: cualquier propiedad ajena produce 422 con rule 'unknown'.",
+    "project": {
+      "fields": [
+        "name",
+        "cutoffDate"
+      ],
+      "$note": "cutoffDate viaja como cadena RFC 3339 full-date con forma YYYY-MM-DD."
+    },
+    "activity": {
+      "fields": [
+        "name",
+        "bac",
+        "plannedProgress",
+        "actualProgress",
+        "ac"
+      ]
+    }
   },
   "readResponse": {
     "$comment": "Payload literal de GET /projects/{projectId} una vez eliminadas las claves con prefijo '$'. ADR-006a: una sola lectura abastece tabla, consolidado y gráfica.",
@@ -705,7 +714,7 @@
         "$id": "V9",
         "$rule": "compuesto",
         "$source": "ADR-009",
-        "$trap": "Caso compuesto: infringe las cinco reglas en una sola petición. Verifica que la validación ACUMULA y no se detiene en la primera. El orden de 'violations' no se asevera.",
+        "$trap": "Caso compuesto: infringe las seis reglas en una sola petición. Verifica que la validación ACUMULA y no se detiene en la primera. El orden de 'violations' no se asevera.",
         "resource": "activity",
         "request": {
           "name": "",
@@ -713,7 +722,8 @@
           "plannedProgress": 101,
           "actualProgress": -0.1,
           "ac": -1,
-          "cpi": 1.5
+          "cpi": 1.5,
+          "owner": "ana"
         },
         "expectedStatus": 422,
         "expectedBody": {
@@ -749,11 +759,118 @@
               "field": "cpi",
               "rule": "read_only",
               "message": "Es un campo de solo lectura y no se admite en una escritura."
+            },
+            {
+              "field": "owner",
+              "rule": "unknown",
+              "message": "No pertenece al esquema de escritura."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V10",
+        "$rule": "required",
+        "$source": "PRD §7.5; ADR-006b",
+        "resource": "project",
+        "$trap": "Ausencia del campo, no null. V2 cubre la forma con null; ADR-009 las trata igual.",
+        "request": {
+          "name": "Proyecto"
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "cutoffDate",
+              "rule": "required",
+              "message": "Es obligatorio."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V11",
+        "$rule": "required",
+        "$source": "ADR-006b; ADR-009",
+        "resource": "activity",
+        "$trap": "null explícito en un campo NUMÉRICO obligatorio. ADR-009 lo trata como ausencia: 422 required, no 400 por tipo incompatible.",
+        "request": {
+          "name": "Actividad",
+          "bac": null,
+          "plannedProgress": 50,
+          "actualProgress": 40,
+          "ac": 500
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "bac",
+              "rule": "required",
+              "message": "Es obligatorio."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V12",
+        "$rule": "unknown",
+        "$source": "ADR-009",
+        "resource": "activity",
+        "$trap": "Propiedad ajena al esquema. No se ignora: 422 con rule 'unknown', conservando el nombre recibido en 'field'.",
+        "request": {
+          "name": "Actividad",
+          "bac": 1000,
+          "plannedProgress": 50,
+          "actualProgress": 40,
+          "ac": 500,
+          "owner": "ana"
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "owner",
+              "rule": "unknown",
+              "message": "No pertenece al esquema de escritura."
+            }
+          ]
+        }
+      },
+      {
+        "$id": "V13",
+        "$rule": "required",
+        "$source": "ADR-009",
+        "resource": "activity",
+        "$trap": "Nombre compuesto solo por espacios. Tras recortar los laterales queda vacío e incumple required.",
+        "request": {
+          "name": "   ",
+          "bac": 1000,
+          "plannedProgress": 50,
+          "actualProgress": 40,
+          "ac": 500
+        },
+        "expectedStatus": 422,
+        "expectedBody": {
+          "code": "validation_failed",
+          "message": "La entrada contiene errores.",
+          "violations": [
+            {
+              "field": "name",
+              "rule": "required",
+              "message": "Es obligatorio."
             }
           ]
         }
       }
-    ]
+    ],
+    "$scopeNote": "ALCANCE DELIBERADO. Este bloque captura comportamientos DISTINTOS, no la combinatoria completa. No enumera la ausencia y el null de cada uno de los siete campos obligatorios: eso son catorce casos para una sola regla y corresponde a una prueba parametrizada que recorra writeSchemas. Aquí hay un representante de cada forma —ausencia en V10, null en V2 y V11— y la prueba genera el resto. Un fixture es un oráculo que se lee a mano; barrer combinatorias lo vuelve ilegible sin añadir señal."
   },
   "errorEnvelopes": {
     "$comment": "ADR-009: los tres códigos de error comparten una sola envolvente, de modo que el consumidor necesita un único manejador. Los textos de 'message' son ilustrativos y no se aseveran; sí se asevera su presencia.",
@@ -784,7 +901,7 @@
       }
     },
     "validationFailed": {
-      "$when": "Cuerpo bien formado que incumple el PRD §7.5 o incluye un campo de solo lectura.",
+      "$when": "Cuerpo bien formado que incumple una regla de negocio de ADR-009, incluidas las del PRD §7.5, read_only, unknown y la normalización de name.",
       "$note": "Ejemplo mínimo con una sola infracción. El catálogo completo está en validationChecks.",
       "expectedStatus": 422,
       "expectedBody": {
@@ -798,6 +915,76 @@
           }
         ]
       }
+    }
+  },
+  "nameNormalization": {
+    "$comment": "ADR-009: se recortan los espacios laterales de 'name' antes de validar y persistir; los interiores se conservan. Único caso de ÉXITO de este bloque: el resto de la normalización se comprueba en V13.",
+    "$id": "N1",
+    "resource": "activity",
+    "request": {
+      "name": "  Actividad con  espacios  ",
+      "bac": 1000,
+      "plannedProgress": 50,
+      "actualProgress": 40,
+      "ac": 500
+    },
+    "expectedStatus": 201,
+    "expectedName": "Actividad con  espacios",
+    "$note": "Los dos espacios interiores se conservan; solo desaparecen los laterales."
+  },
+  "collectionResponse": {
+    "$comment": "ADR-006a: GET /projects devuelve un arreglo JSON desnudo, sin envolvente, cuyos elementos contienen solo id y name (ADR-006b). Abastece exclusivamente el selector.",
+    "expectedStatus": 200,
+    "expectedBody": [
+      {
+        "id": 1,
+        "name": "Proyecto de referencia"
+      },
+      {
+        "id": 2,
+        "name": "Proyecto sin actividades"
+      }
+    ],
+    "empty": {
+      "$when": "No hay ningún proyecto.",
+      "expectedStatus": 200,
+      "expectedBody": []
+    }
+  },
+  "successResponses": {
+    "$comment": "Formas de respuesta de éxito que no necesitan datos propios porque reutilizan los ya presentes en este fixture, conforme a ADR-007.",
+    "listProjects": {
+      "expectedStatus": 200,
+      "$shape": "collectionResponse.expectedBody"
+    },
+    "createProject": {
+      "expectedStatus": 201,
+      "$shape": "readResponse.project"
+    },
+    "replaceProject": {
+      "expectedStatus": 200,
+      "$shape": "readResponse.project",
+      "$note": "PUT reemplaza todos los campos editables (ADR-006a)."
+    },
+    "createActivity": {
+      "expectedStatus": 201,
+      "$shape": "readResponse.activities[i]"
+    },
+    "replaceActivity": {
+      "expectedStatus": 200,
+      "$shape": "readResponse.activities[i]"
+    },
+    "deleteProject": {
+      "expectedStatus": 204,
+      "$shape": "sin cuerpo"
+    },
+    "deleteActivity": {
+      "expectedStatus": 204,
+      "$shape": "sin cuerpo"
+    },
+    "getProject": {
+      "expectedStatus": 200,
+      "$shape": "readResponse"
     }
   }
 }

@@ -18,6 +18,10 @@ La envolvente heredada de ADR-006a denomina sus bloques `project`, `activities` 
 
 Los identificadores de proyecto y actividad son enteros tanto en los campos `id` de las representaciones como en los parámetros `projectId` y `activityId` de las rutas definidas por ADR-006a.
 
+Cada elemento de `GET /projects` contiene el `id` entero y `name`; omite `cutoffDate` porque la colección abastece solo el selector.
+
+`cutoffDate` cruza el cable como cadena `format: date`: un `full-date` de RFC 3339 con forma `YYYY-MM-DD`.
+
 Los porcentajes cruzan el API entre 0 y 100. El backend los convierte a la fracción interna de ADR-003.
 
 Los valores cuantitativos se serializan como números JSON. El contrato acepta la aproximación IEEE-754 del consumidor. El backend conserva su aritmética decimal.
@@ -30,12 +34,14 @@ Un índice no evaluable usa `null` en `value` y `display`. Su `status` es `not_e
 
 Los demás indicadores usan un número o `null`. Los montos nunca incluyen marcador.
 
-La escritura de actividad usa un objeto distinto con `name`, `bac`, `plannedProgress`, `actualProgress` y `ac`. La lectura añade `id` como metadato y los ocho indicadores derivados.
+La escritura de proyecto contiene exactamente `name` y `cutoffDate`; ambos son obligatorios al crear y reemplazar. La escritura de actividad contiene exactamente `name`, `bac`, `plannedProgress`, `actualProgress` y `ac`. Los cinco campos son obligatorios en toda creación y reemplazo.
 
 ## Alternativas consideradas
 
 - **Cadenas decimales:** preservarían exactitud en el cable, pero exigirían conversiones para gráficas y operaciones básicas.
 - **Campos paralelos para CPI y SPI:** producirían objetos planos, pero separarían valor, presentación e interpretación.
+- **Valores numéricos opcionales o predeterminados:** dejarían la actividad incompleta o inventarían datos para calcular indicadores.
+- **Fecha como instante o época:** aportaría hora y zona que la foto vigente no necesita y podría desplazar el día de corte.
 
 ## Consecuencias
 
@@ -46,7 +52,10 @@ La escritura de actividad usa un objeto distinto con `name`, `bac`, `plannedProg
 - Un requisito futuro de varios idiomas obligaría a revisar si `label` sigue viajando desde el backend o se deriva en el cliente desde `status`.
 - Los consumidores pueden observar aproximaciones binarias. Un intercambio financiero exacto obligaría a revisar el uso de números JSON.
 - Los identificadores son secuenciales y, por tanto, adivinables y enumerables. Esto sería inaceptable en un recurso expuesto públicamente, pero resulta irrelevante en una herramienta interna sin control de acceso.
+- Crear o reemplazar exige todos los datos capturados; una ausencia o `null` se informa como `required` según ADR-009.
+- `cutoffDate` conserva el día, pero no expresa hora ni zona.
+- La colección usa una representación de proyecto menor que la lectura individual.
 
 ## Verificación
 
-Pruebas de contrato validan contra `contracts/evm/evm-fixture.json` nombres, bloques, rango 0–100, tipos JSON y esquemas distintos. El fixture conserva para CPI y SPI el valor completo, `display`, `status` y `label` esperados. Los casos cubren actividad, consolidado, límites con y sin marcador y no evaluabilidad. Ningún monto lleva marcador.
+Pruebas de contrato validan contra `contracts/evm/evm-fixture.json` nombres, bloques, rango 0–100, tipos JSON y esquemas distintos. Comprueban `{id, name}` en la colección, `name` y `cutoffDate` obligatorios en proyecto, los cinco campos obligatorios en actividad y `cutoffDate` como `YYYY-MM-DD`. El fixture conserva para CPI y SPI el valor completo, `display`, `status` y `label`; los casos cubren actividad, consolidado, marcadores y no evaluabilidad. Ningún monto lleva marcador.
