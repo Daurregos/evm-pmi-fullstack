@@ -4,14 +4,46 @@
 
 Estas instrucciones aplican a todo el repositorio.
 
-Antes de cambiar el producto, revisa las fuentes aplicables en este orden:
+Antes de cambiar el producto, identifica las fuentes aplicables y respeta la
+autoridad de cada una sobre el asunto en disputa:
 
-1. `docs/PRD.md`: define qué necesita el producto y por qué. No introduce decisiones técnicas.
-2. `docs/adr/`: registra decisiones arquitectónicas, alternativas y consecuencias.
-3. OpenSpec: mantiene la propuesta, las especificaciones, el SDD y las tareas del cambio activo.
-4. Código, pruebas y evidencia: materializan y verifican el comportamiento aprobado.
+| Fuente | Autoridad sobre |
+|---|---|
+| `docs/PRD.md` | Qué se construye, reglas de negocio y criterios de aceptación |
+| `docs/ASSUMPTIONS.md` | Supuestos adoptados y su trazabilidad, subordinados al PRD |
+| `docs/adr/` | Decisiones arquitectónicas y técnicas |
+| OpenSpec del cambio activo | Propuesta, especificaciones, SDD y tareas del cambio |
+| `contracts/evm/evm-fixture.json` | Oráculo de los valores numéricos y de la forma de los ejemplos contractuales |
+| `contracts/evm/FIXTURE.md` | Guía de lectura del fixture |
+| `contracts/evm/openapi.yaml` | Contrato HTTP publicado |
+| `docs/TESTING.md` | Qué se prueba, en qué nivel y contra qué |
+| Código, pruebas y evidencia | Materialización y verificación del comportamiento aprobado |
 
-No resuelvas silenciosamente contradicciones en el código. Corrige o escala primero el artefacto responsable. Evita copiar contenido entre niveles; enlaza la fuente canónica. Si el trabajo sobre un ADR revela una ambigüedad de producto o cambia un comportamiento visible, actualiza primero `docs/PRD.md`; después alinea el ADR y sus artefactos dependientes. Tras modificar una fuente superior, audita explícitamente sus dependientes, incluido este `AGENTS.md` y OpenSpec cuando exista un cambio activo.
+La precedencia es temática, no una jerarquía lineal absoluta. Ante un conflicto,
+gana la fuente con autoridad sobre el asunto en disputa. Si dos fuentes se
+contradicen sobre el mismo asunto, detente y repórtalo en lugar de elegir una.
+
+No resuelvas silenciosamente contradicciones en el código. Corrige o escala primero el artefacto responsable. Evita copiar contenido entre niveles; enlaza la fuente canónica. Si el trabajo sobre un ADR revela una ambigüedad de producto o cambia un comportamiento visible, actualiza primero `docs/PRD.md`; después alinea el ADR y sus artefactos dependientes. Tras modificar una fuente autoritativa sobre el asunto, audita explícitamente sus dependientes, incluido este `AGENTS.md` y OpenSpec cuando exista un cambio activo.
+
+## Closed artifacts during implementation
+
+En una tarea de implementación, trata el PRD, los ADR, el fixture y el OpenAPI
+como decisiones cerradas. No los modifiques para reconciliar el código ni para
+hacer pasar una prueba. Si alguno parece incorrecto, detén la implementación y
+repórtalo; su corrección exige el flujo documental o contractual dedicado y la
+auditoría posterior de sus dependientes.
+
+## Oracle rules
+
+Estas reglas no dependen de haber leído `docs/TESTING.md`:
+
+1. Toda prueba cuyo comportamiento esperado esté representado en
+   `contracts/evm/evm-fixture.json` lo carga directamente; nunca recalcula los
+   valores esperados con la misma lógica que está probando.
+2. El fixture no se modifica para hacer pasar una prueba dentro de un ciclo
+   rojo-verde. Ante una discrepancia, el defecto está en el código cuando el
+   fixture sigue siendo coherente con el PRD, los ADR y el OpenAPI aplicables;
+   si esas fuentes discrepan, detente y reporta el conflicto.
 
 ## Required change workflow
 
@@ -54,14 +86,29 @@ Los planes referencian las rutas canónicas de PRD y ADR, describen cambios conc
 `docs/PRD.md` es la fuente canónica de fórmulas, casos límite, banda de tolerancia y lenguaje del dominio.
 
 - Los cinco únicos datos capturados por actividad son: nombre, BAC, avance planificado a la fecha de corte, avance real y AC.
-- PV, EV, CV, SV, CPI, SPI, EAC y VAC son indicadores derivados. Nunca se capturan ni se editan.
-- Consolida sumando BAC, PV, EV y AC por actividad; calcula variaciones, ratios y proyecciones después. Nunca promedies CPI ni SPI.
+- PV, EV, CV, SV, CPI, SPI, EAC y VAC son indicadores derivados. Nunca se
+  capturan, editan, persisten ni aceptan en escritura. Tampoco se calculan en
+  el cliente.
+- Consolida sumando BAC, PV, EV y AC por actividad; calcula variaciones, ratios
+  y proyecciones después. Nunca promedies CPI ni SPI.
 - El avance del proyecto es `EV_total / BAC_total`.
 - Las divisiones por cero producen estados de negocio legítimos definidos o no evaluables según el PRD; no son errores técnicos.
-- La interpretación de CPI y SPI es salida del sistema. Aplica la banda neutral al valor sin redondear, según lo definido por el PRD.
+- `cpi.value = 0` es un valor definido y desfavorable, distinto de un indicador
+  no evaluable.
+- El redondeo pertenece exclusivamente a la presentación. Los cálculos, la
+  clasificación y la interpretación usan valores sin redondear; aplica la banda
+  neutral al índice sin redondear según el PRD.
 - En requisitos de producto, conserva la trazabilidad: `[E]` explícito, `[D]` derivado necesariamente del dominio y `[S]` supuesto adoptado.
 
 No dupliques aquí las fórmulas ni la matriz completa de estados. Si cambia una regla EVM, actualiza primero el PRD y después sus artefactos dependientes.
+
+## Contract conventions
+
+- Los campos y `operationId` usan inglés `lowerCamelCase`.
+- Los valores enumerados usan inglés y conservan exactamente la forma definida
+  por los ADR y `contracts/evm/openapi.yaml`.
+- Los textos contractuales dirigidos a personas —como `label`, `message`,
+  resúmenes y descripciones— usan español.
 
 ## Safety and ownership
 
@@ -83,11 +130,13 @@ git diff --check
 
 Antes del cierre:
 
-1. Comprueba cada requisito o tarea contra el diff resultante.
-2. Ejecuta verificaciones frescas y lee su salida completa.
-3. Revisa que el commit contenga solo archivos del cambio.
-4. Confirma el estado del PR y su destino `develop`.
-5. Informa evidencia, limitaciones y cambios locales preservados.
-6. Ejecuta literalmente los comandos prescritos y confirma que validan el artefacto objetivo.
+1. Contrasta el resultado con `docs/TESTING.md` y con la sección `Verificación`
+   de cada ADR aplicable.
+2. Comprueba cada requisito o tarea contra el diff resultante.
+3. Ejecuta verificaciones frescas y lee su salida completa.
+4. Revisa que el commit contenga solo archivos del cambio.
+5. Confirma el estado del PR y su destino `develop`.
+6. Informa evidencia, limitaciones y cambios locales preservados.
+7. Ejecuta literalmente los comandos prescritos y confirma que validan el artefacto objetivo.
 
 No declares que algo funciona, está integrado o está limpio basándote solo en una edición, una ejecución anterior o el reporte de otro agente.
