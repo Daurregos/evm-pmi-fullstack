@@ -337,6 +337,13 @@ probe deletion.
 
 ### Task 3: Crear el núcleo EVM mediante TDD
 
+> **Corrección de ejecución (2026-07-28):** Task 3 materializó por RED-GREEN la
+> API y la primitiva, y en ese bloque dejó completas las rutas puras. Por ello,
+> las matrices exhaustivas de Tasks 4 y 5 se ejecutan como caracterización
+> directa del fixture: si su primera ejecución es GREEN, una mutación temporal
+> demuestra el RED y se revierte para restaurar GREEN. Esta secuencia no cambia
+> los resultados ni los criterios del plan.
+
 **Files:**
 
 - Create: `tests/domain/evm.test.ts`

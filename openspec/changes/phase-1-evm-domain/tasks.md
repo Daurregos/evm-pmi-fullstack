@@ -24,29 +24,37 @@
 
 ## 3. Implementar la primitiva y la actividad con TDD
 
-- [ ] 3.1 Escribir y observar fallar pruebas que carguen el fixture para la
-  forma estable de CPI/SPI, cero definido, no evaluabilidad, ocho indicadores
-  y estado derivado.
+- [x] 3.1 Cargar directamente el fixture y caracterizar la forma estable de
+  CPI/SPI, cero definido, no evaluabilidad, ocho indicadores y estado derivado;
+  cuando el comportamiento ya exista, registrar el primer GREEN, demostrar
+  sensibilidad mediante una mutación temporal RED y restaurar el GREEN.
 - [x] 3.2 Implementar los tipos enfocados y
   `deriveFromMagnitudes(bac, pv, ev, ac)` con aritmética Decimal sin
   cuantización intermedia hasta pasar esas pruebas.
-- [ ] 3.3 Escribir y observar fallar las pruebas de las ocho actividades y
-  luego implementar `deriveActivity` calculando solo PV/EV antes de delegar en
-  la primitiva.
+- [x] 3.3 Cargar directamente el fixture y caracterizar las ocho actividades,
+  verificando que `deriveActivity` calcule solo PV/EV antes de delegar en la
+  primitiva; cuando el comportamiento ya exista, registrar el primer GREEN,
+  demostrar sensibilidad mediante una mutación temporal RED y restaurar el
+  GREEN.
 
 ## 4. Completar taxonomía y presentación con TDD
 
-- [ ] 4.1 Cubrir contra el fixture los cinco estados de actividad, las cuatro
+- [x] 4.1 Cubrir contra el fixture los cinco estados de actividad, las cuatro
   combinaciones de evaluabilidad y la no propagación de una actividad no
   evaluable al consolidado.
-- [ ] 4.2 Escribir y observar fallar los siete casos de `neutralBandChecks` y
-  luego implementar clasificación sin redondear, etiquetas españolas y
-  marcadores limitados a cruces ocultos.
+- [x] 4.2 Cargar directamente los siete casos de `neutralBandChecks` y
+  caracterizar clasificación sin redondear, etiquetas españolas y marcadores
+  limitados a cruces ocultos; cuando el comportamiento ya exista, registrar el
+  primer GREEN, demostrar sensibilidad mediante una mutación temporal RED y
+  restaurar el GREEN.
 
 ## 5. Implementar la consolidación con TDD
 
-- [ ] 5.1 Escribir y observar fallar las pruebas del resumen de referencia,
-  incluidos avance, conteo de EV positivo con AC cero y proyecto vacío.
+- [ ] 5.1 Cargar directamente el fixture y caracterizar el resumen de
+  referencia, incluidos avance, conteo de EV positivo con AC cero y proyecto
+  vacío; cuando el comportamiento ya exista, registrar el primer GREEN,
+  demostrar sensibilidad mediante una mutación temporal RED y restaurar el
+  GREEN.
 - [ ] 5.2 Implementar `consolidateProject` sumando BAC, PV, EV y AC y delegando
   los resultados compartidos a la misma primitiva.
 - [ ] 5.3 Añadir las tres aserciones negativas explícitas contra

@@ -99,10 +99,16 @@ observa el fallo de `npm run lint` y restaura el archivo.
 
 1. Integrar y resolver el WIP de lint; verificar las fronteras antes de añadir
    lógica.
-2. Implementar el dominio por ciclos TDD contra el fixture.
-3. Trasladar las garantías de la sonda y retirarla.
-4. Añadir lint/imports a CI y ejecutar la demostración negativa.
-5. Verificar las tareas, archivar los cambios OpenSpec completos y abrir un PR
+2. Materializar la API pública y la primitiva mediante ciclos RED-GREEN contra
+   el fixture, completando en ese mismo bloque las rutas puras de actividad y
+   proyecto.
+3. Para las matrices exhaustivas que ya quedaron cubiertas por ese código,
+   ejecutar primero su caracterización directa contra el fixture; demostrar la
+   sensibilidad mediante una mutación temporal que produzca RED y restaurar
+   después el GREEN sin conservar la mutación.
+4. Trasladar las garantías de la sonda y retirarla.
+5. Añadir lint/imports a CI y ejecutar la demostración negativa.
+6. Verificar las tareas, archivar los cambios OpenSpec completos y abrir un PR
    dirigido a `develop`.
 
 La reversión consiste en revertir los commits lógicos del slice. No existe
