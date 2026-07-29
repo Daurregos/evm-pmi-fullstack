@@ -7,7 +7,7 @@ on:
     branches: [develop]
 
 jobs:
-  phase-0:
+  quality:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -27,13 +27,56 @@ jobs:
       DATABASE_URL: postgres://evm:evm@127.0.0.1:5432/evm
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run lint:imports
-      - run: npm run typecheck
-      - run: npm run test:coverage
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint without warnings
+        run: npm run lint -- --max-warnings 0
+
+      - name: Enforce import boundaries
+        run: npm run lint:imports
+
+      - name: Check types
+        run: npm run typecheck
+
+      - name: Run complete suite with coverage
+        run: |
+          set -o pipefail
+          npm run test:coverage | tee coverage-output.txt
+
+      - name: Publish coverage summary
+        if: always()
+        run: |
+          {
+            echo "## Cobertura"
+            echo
+            if [[ -f coverage-output.txt ]] &&
+              grep -q '^| Capa | Líneas | Ramas | Funciones | Sentencias |$' coverage-output.txt; then
+              sed -n \
+                '/^| Capa | Líneas | Ramas | Funciones | Sentencias |$/,/^$/p' \
+                coverage-output.txt
+            else
+              echo "La ejecución no generó una tabla de cobertura."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Build application
+        run: npm run build
