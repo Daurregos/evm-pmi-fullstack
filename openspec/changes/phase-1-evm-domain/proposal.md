@@ -30,8 +30,9 @@ que sus responsabilidades se dispersen.
 
 ### Modified Capabilities
 
-Ninguna. Las reglas del scaffold se completan sin cambiar sus requisitos y el
-contrato HTTP publicado permanece intacto.
+- `project-scaffold`: traslada las garantías de la sonda decimal a pruebas
+  permanentes y retira el script temporal junto con sus referencias e ignores
+  ejecutables. El contrato HTTP publicado permanece intacto.
 
 ## Impact
 
