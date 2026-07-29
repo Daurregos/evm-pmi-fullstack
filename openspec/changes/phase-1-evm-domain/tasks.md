@@ -1,12 +1,12 @@
 ## 1. Integrar y cerrar las fronteras de fase 0
 
-- [ ] 1.1 Fusionar explícitamente `chore/phase-0-lint-rules-wip` y resolver sus
+- [x] 1.1 Fusionar explícitamente `chore/phase-0-lint-rules-wip` y resolver sus
   conflictos contra el scaffold vigente sin conservar tipos de dominio
   paralelos ni modificar fuentes cerradas.
-- [ ] 1.2 Ajustar la configuración y las pruebas ESLint al alcance aprobado para
+- [x] 1.2 Ajustar la configuración y las pruebas ESLint al alcance aprobado para
   `domain/`, `ui/`, `application/` y la política Decimal, excluyendo
   `scripts/` y `contracts/`.
-- [ ] 1.3 Añadir `npm run lint` y `npm run lint:imports` a CI, ejecutar lint,
+- [x] 1.3 Añadir `npm run lint` y `npm run lint:imports` a CI, ejecutar lint,
   imports y typecheck, y demostrar con un import real temporal que lint falla
   antes de restaurar el archivo.
 - [ ] 1.4 Completar la evidencia y las tareas pendientes del cambio

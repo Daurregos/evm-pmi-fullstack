@@ -19,21 +19,9 @@ y deben retirarse cuando Next.js fije versiones corregidas.
 - `npm run db:seed`: carga el fixture.
 - `npm test`: ejecuta la suite completa contra PostgreSQL.
 
-## Deuda conocida
+## Seguimiento técnico
 
-El estado canónico de ejecución está en
-`openspec/changes/phase-0-project-scaffold/tasks.md`: 20 de 28 tareas están
-completas. El cambio no debe archivarse hasta resolver las siguientes tareas
-que bloquean el cierre:
-
-| Pendiente | Estado y siguiente acción |
-|---|---|
-| Reglas de fronteras y decimal | El trabajo está preservado en `chore/phase-0-lint-rules-wip` (`ed0107f`). Recuperar únicamente su configuración y pruebas, completar el ciclo rojo-verde y verificar que solo inspeccionen `src/`. |
-| Lint local | `npm run lint` no tiene todavía `eslint.config.mjs` y `npm run lint:imports` no tiene `tests/domain/architecture.test.ts`. Ambos comandos fallan deliberadamente hasta recuperar la rama anterior. |
-| CI completo | El workflow actual cubre instalación reproducible, migración, tipos y pruebas estructurales, de integración y de contrato con PostgreSQL. Añadir lint e imports cuando estén terminados; la sonda decimal debe permanecer excluida. |
-| Cierre OpenSpec | Ejecutar las verificaciones 8.1–8.4, revisar el cambio completo y archivar únicamente después de que CI incluya y supere lint/imports. |
-
-Seguimiento no bloqueante para el andamiaje mínimo:
+Deuda no bloqueante posterior al andamiaje:
 
 - Añadir una prueba de integración del borrado en cascada real; hoy se comprueba
   la declaración `ON DELETE CASCADE` de la migración y del catálogo PostgreSQL.

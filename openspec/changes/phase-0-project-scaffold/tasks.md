@@ -11,10 +11,10 @@
 
 ## 2. Fronteras y módulo decimal
 
-- [ ] 2.1 Escribir pruebas estructurales o fixtures de lint que fallen para cada
+- [x] 2.1 Escribir pruebas estructurales o fixtures de lint que fallen para cada
   dirección de import prohibida y para llamadas decimales fuera del módulo
   autorizado.
-- [ ] 2.2 Configurar `eslint.config.mjs` con `no-restricted-imports` y
+- [x] 2.2 Configurar `eslint.config.mjs` con `no-restricted-imports` y
   `no-restricted-syntax` limitados a `src/`, y exponer `npm run lint` y
   `npm run lint:imports`.
 - [x] 2.3 Crear `src/domain/decimal.ts` con la única configuración y función de
@@ -23,7 +23,7 @@
 - [x] 2.4 Crear una sola interfaz de repositorio en `src/application/` y los
   tipos contractuales/códigos de error mínimos en `src/shared/`, sin DTOs
   duplicados ni puertos adicionales.
-- [ ] 2.5 Ejecutar literalmente `npm run lint`, `npm run lint:imports` y
+- [x] 2.5 Ejecutar literalmente `npm run lint`, `npm run lint:imports` y
   `npm run typecheck` y confirmar que inspeccionan `src/`.
 
 ## 3. PostgreSQL, Drizzle y migración
@@ -76,7 +76,7 @@
 - [x] 7.1 Crear los guiones ejecutables y scripts de `package.json` para
   `env:up`, `env:down`, migración, semilla, desarrollo, lint, imports, tipos y
   pruebas.
-- [ ] 7.2 Crear `.github/workflows/ci.yml` con PostgreSQL, instalación
+- [x] 7.2 Crear `.github/workflows/ci.yml` con PostgreSQL, instalación
   reproducible, migración, lint, imports, tipos y suite completa; excluir
   explícitamente la sonda.
 - [x] 7.3 Probar literalmente `npm run env:down` seguido de `npm run env:up` y
@@ -85,14 +85,14 @@
 
 ## 8. Verificación y cierre
 
-- [ ] 8.1 Ejecutar verificaciones frescas: `npm run lint`,
+- [x] 8.1 Ejecutar verificaciones frescas: `npm run lint`,
   `npm run lint:imports`, `npm run typecheck`, `npm test` y
   `git diff --check`.
-- [ ] 8.2 Contrastar el diff con cada requisito de
+- [x] 8.2 Contrastar el diff con cada requisito de
   `openspec/changes/phase-0-project-scaffold/specs/project-scaffold/spec.md`,
   `docs/TESTING.md` y las secciones `Verificación` de ADR-001, ADR-002,
   ADR-003, ADR-005, ADR-006a, ADR-006b y ADR-008.
-- [ ] 8.3 Confirmar que el commit contiene solo archivos de fase 0, que no
+- [x] 8.3 Confirmar que el commit contiene solo archivos de fase 0, que no
   modifica fuentes cerradas y que `src/` no contiene fórmulas EVM, rutas reales
   ni componentes.
 - [ ] 8.4 Solicitar revisión de código, resolver hallazgos con evidencia y
