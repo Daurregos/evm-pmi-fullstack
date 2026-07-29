@@ -25,5 +25,5 @@
 ## 5. Completion evidence
 
 - [x] 5.1 Contrast every verification statement in ADR-006a, ADR-006b, ADR-007 and ADR-009 with a named automated test, add the focused `cutoffDate` preservation coverage, and record the three client-flow checks as inherited B2 scope in `README.md`.
-- [ ] 5.2 Run fresh `npm test`, `npm run lint`, `npm run build`, OpenSpec validation and `git diff --check`, and inspect the complete outputs.
-- [ ] 5.3 Review every OpenSpec task and requirement against the final diff, confirm commits contain only slice-owned files, preserve main-worktree local files, and report branch/PR state and exclusions.
+- [x] 5.2 Run fresh `npm test`, `npm run lint`, `npm run build`, OpenSpec validation and `git diff --check`, and inspect the complete outputs.
+- [x] 5.3 Review every OpenSpec task and requirement against the final diff, confirm commits contain only slice-owned files, preserve main-worktree local files, and report branch/PR state and exclusions.
