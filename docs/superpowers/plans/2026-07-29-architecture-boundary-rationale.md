@@ -121,3 +121,46 @@ gh pr view --json number,state,baseRefName,headRefName,url
 ```
 
 Expected: PR abierto desde `feat/slice-a2-http-surface` hacia `develop`.
+
+### Task 3: Corregir la comprobación estructural en CI superficial
+
+**Files:**
+
+- Modify: `tests/contract/http-surface-structure.test.ts`
+
+- [ ] **Step 1: Reproducir el fallo de Git observado en PR #26**
+
+Ejecutar la prueba desde un clon `--depth 1 --single-branch` que no tenga
+`origin/develop`.
+
+Expected: RED con `fatal: bad revision 'origin/develop'` en
+`the fixture-backed mock remains unchanged`.
+
+- [ ] **Step 2: Sustituir la dependencia ambiental**
+
+Eliminar `spawnSync` y hacer que la prueba inspeccione directamente
+`src/app/mock-api`: debe contener solo los dos `route.ts` de lectura, importar
+`@/infrastructure/mock/responses`, no importar `@/infrastructure/http/` y no
+exportar `POST`, `PUT` ni `DELETE`.
+
+- [ ] **Step 3: Verificar la corrección**
+
+```bash
+node --import tsx --test tests/contract/http-surface-structure.test.ts
+npm run test:contract
+npm run lint
+git diff --check
+```
+
+Expected: todos los comandos terminan con código cero sin depender de una
+referencia Git remota.
+
+- [ ] **Step 4: Registrar y publicar la corrección**
+
+```bash
+git add -- tests/contract/http-surface-structure.test.ts \
+  docs/superpowers/plans/2026-07-29-architecture-boundary-rationale.md
+git diff --cached --check
+git commit -m "test(http): make mock boundary check CI-independent"
+git push
+```

@@ -5,12 +5,12 @@ import {
   statSync,
 } from "node:fs";
 import { relative, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 
 const projectRoot = process.cwd();
 const routeRoot = resolve(projectRoot, "src/app/projects");
 const httpRoot = resolve(projectRoot, "src/infrastructure/http");
+const mockRouteRoot = resolve(projectRoot, "src/app/mock-api");
 
 function filesBelow(directory: string): string[] {
   return readdirSync(directory)
@@ -104,12 +104,21 @@ test("HTTP translation contains no EVM calculation", () => {
   }
 });
 
-test("the fixture-backed mock remains unchanged", () => {
-  const diff = spawnSync(
-    "git",
-    ["diff", "--quiet", "origin/develop", "--", "src/app/mock-api"],
-    { cwd: projectRoot },
+test("the fixture-backed mock stays isolated from real HTTP adapters", () => {
+  const mockFiles = filesBelow(mockRouteRoot);
+
+  assert.deepEqual(
+    mockFiles.map((path) => relative(mockRouteRoot, path)),
+    ["projects/[projectId]/route.ts", "projects/route.ts"],
   );
 
-  assert.equal(diff.status, 0, diff.stderr.toString());
+  for (const path of mockFiles) {
+    const contents = readFileSync(path, "utf8");
+    assert.match(contents, /@\/infrastructure\/mock\/responses/);
+    assert.doesNotMatch(contents, /@\/infrastructure\/http\//);
+    assert.doesNotMatch(
+      contents,
+      /export (?:async )?function (DELETE|POST|PUT)\b/,
+    );
+  }
 });
