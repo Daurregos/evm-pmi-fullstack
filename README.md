@@ -8,6 +8,7 @@
 | PostgreSQL en Docker | Prueba tipos decimales y transacciones reales. |
 | Drizzle ORM | `numeric` llega como cadena y se convierte explícitamente al `Decimal` configurado por el dominio; sus migraciones SQL permiten revisar `ON DELETE CASCADE`. |
 | decimal.js | Proporciona aritmética decimal base diez según ADR-003. |
+| Recharts | Grafica PV, EV y AC por actividad sin construir un SVG a mano. |
 
 Los overrides transitivos de PostCSS y Sharp remedian avisos vigentes de Next.js
 y deben retirarse cuando Next.js fije versiones corregidas.
@@ -38,6 +39,29 @@ NEXT_PUBLIC_EVM_API_BASE_URL=/
 Cambiar de mock a backend no requiere cambios de código. Como es una variable
 `NEXT_PUBLIC_`, Next.js incorpora su valor al build del cliente.
 
+## Dashboard
+
+`npm run dev` levanta el dashboard en `/`. Sin configuración lee el mock, así
+que muestra el proyecto de referencia del fixture con sus ocho actividades, los
+cuatro estados visuales y un consolidado desfavorable. El selector cambia al
+proyecto sin actividades.
+
+Reparto de responsabilidades en la presentación:
+
+- Los índices se muestran con `cpi.display` y `spi.display` tal cual. Los
+  marcadores `<0,99` y `>1,01` son lógica de negocio que resuelve el backend
+  (ADR-004); el cliente no los deriva. `value` solo alimenta la gráfica.
+- Los montos y los porcentajes cruzan sin redondear y el cliente los presenta:
+  montos con dos decimales, coma decimal, punto de millar y `−` para el
+  negativo; los porcentajes, enteros.
+- El estado visual proviene de `status`. `neutral` y `not_evaluable` comparten
+  apariencia, como pide RF-08, y siguen siendo estados distintos en el código y
+  en el marcado.
+
+El cliente no calcula indicadores. `tests/client/client-boundaries.test.ts`
+comprueba que ningún módulo de `src/ui/` importa capas de servidor y que ningún
+módulo del cliente mezcla vocabulario EVM con aritmética.
+
 ## Contrato compartido durante el trabajo paralelo
 
 `src/shared/contract.ts` contiene el contrato HTTP completo que consumen
@@ -48,6 +72,20 @@ de manera unilateral.
 ## Seguimiento técnico
 
 Deuda no bloqueante posterior al andamiaje:
+
+- Recharts está fijado en `2.15.4`, rama que su autor marca como no activa.
+  Recharts 3 traslada el trazado a efectos y en `renderToStaticMarkup` produce
+  un contenedor vacío, con lo que RF-09 quedaría sin prueba en el nivel de
+  cliente. Actualizar exige antes un nivel de prueba con DOM.
+- Las pruebas de cliente renderizan con `react-dom/server`, así que no ejercitan
+  efectos ni el `change` del selector. `src/ui/dashboard-view.tsx` se mantiene
+  sin lógica propia por esa razón.
+- Con `PV = 0` y `SV` positivo, RF-08 permite mostrar «avance anticipado». No se
+  implementa: el contrato no lleva campo para esa nota y derivarla en el cliente
+  sería interpretación, contra ADR-001. Requiere decidir un campo del contrato.
+- Los porcentajes capturados se muestran redondeados a entero, según el PRD
+  §7.4. Cuando B2 añada edición, el formulario debe recibir el valor sin
+  redondear para no perder centésimas al reenviarlo.
 
 - Añadir una prueba de integración del borrado en cascada real; hoy se comprueba
   la declaración `ON DELETE CASCADE` de la migración y del catálogo PostgreSQL.
