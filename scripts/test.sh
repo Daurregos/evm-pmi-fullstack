@@ -7,5 +7,6 @@ docker compose up -d --wait
 npm run db:migrate
 npm run typecheck
 npm run test:structure
+npm run test:client
 npm run test:integration
 npm run test:contract

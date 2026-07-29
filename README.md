@@ -19,6 +19,32 @@ y deben retirarse cuando Next.js fije versiones corregidas.
 - `npm run db:seed`: carga el fixture.
 - `npm test`: ejecuta la suite completa contra PostgreSQL.
 
+## Mock y base HTTP del cliente
+
+El mock derivado de `contracts/evm/evm-fixture.json` vive bajo
+`/mock-api`; por ejemplo, la colección está en
+`GET /mock-api/projects`.
+
+El cliente lee `NEXT_PUBLIC_EVM_API_BASE_URL`. Sin configuración usa
+`/mock-api`. Puede recibir una ruta relativa, una URL absoluta o `/` para el
+backend real en el mismo origen:
+
+```bash
+NEXT_PUBLIC_EVM_API_BASE_URL=/mock-api
+NEXT_PUBLIC_EVM_API_BASE_URL=https://api.example.test
+NEXT_PUBLIC_EVM_API_BASE_URL=/
+```
+
+Cambiar de mock a backend no requiere cambios de código. Como es una variable
+`NEXT_PUBLIC_`, Next.js incorpora su valor al build del cliente.
+
+## Contrato compartido durante el trabajo paralelo
+
+`src/shared/contract.ts` contiene el contrato HTTP completo que consumen
+backend y frontend y queda cerrado durante esta fase. Si una vía necesita otro
+tipo, debe detenerse y reportar la divergencia; no debe ampliar `src/shared/`
+de manera unilateral.
+
 ## Seguimiento técnico
 
 Deuda no bloqueante posterior al andamiaje:

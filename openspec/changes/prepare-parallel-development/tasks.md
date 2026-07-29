@@ -16,10 +16,10 @@
 - [x] 2.2 Mover los handlers a `src/app/mock-api/projects/`, eliminar los
   handlers mock de `src/app/projects/` y comprobar en GREEN colección, dos
   lecturas y tres envolventes de error.
-- [ ] 2.3 Añadir primero pruebas de resolución predeterminada, relativa y
+- [x] 2.3 Añadir primero pruebas de resolución predeterminada, relativa y
   absoluta de la base, observar RED por el módulo ausente e implementar
   `src/ui/api-base-url.ts` con `NEXT_PUBLIC_EVM_API_BASE_URL`.
-- [ ] 2.4 Documentar en `README.md` el prefijo, la variable, el valor
+- [x] 2.4 Documentar en `README.md` el prefijo, la variable, el valor
   predeterminado y el cierre de `src/shared/`.
 
 ## 3. Congelar el contrato compartido

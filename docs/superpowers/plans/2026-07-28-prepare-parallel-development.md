@@ -347,9 +347,19 @@ import {
   resolveEvmApiBaseUrl,
 } from "../../src/ui/api-base-url";
 
-test("uses the mock prefix when no public base is configured", () => {
-  assert.equal(resolveEvmApiBaseUrl(undefined), "/mock-api");
-  assert.equal(buildEvmApiUrl("/projects", undefined), "/mock-api/projects");
+test("uses the mock prefix when no public base is configured", (context) => {
+  const previous = process.env.NEXT_PUBLIC_EVM_API_BASE_URL;
+  delete process.env.NEXT_PUBLIC_EVM_API_BASE_URL;
+  context.after(() => {
+    if (previous === undefined) {
+      delete process.env.NEXT_PUBLIC_EVM_API_BASE_URL;
+    } else {
+      process.env.NEXT_PUBLIC_EVM_API_BASE_URL = previous;
+    }
+  });
+
+  assert.equal(resolveEvmApiBaseUrl(), "/mock-api");
+  assert.equal(buildEvmApiUrl("/projects"), "/mock-api/projects");
 });
 
 test("normalizes a configured relative base", () => {
@@ -444,6 +454,17 @@ Cambiar de mock a backend no requiere cambios de código. Como es una variable
 `NEXT_PUBLIC_`, Next.js incorpora su valor al build del cliente.
 ````
 
+Añadir también:
+
+```markdown
+## Contrato compartido durante el trabajo paralelo
+
+`src/shared/contract.ts` contiene el contrato HTTP completo que consumen
+backend y frontend y queda cerrado durante esta fase. Si una vía necesita otro
+tipo, debe detenerse y reportar la divergencia; no debe ampliar `src/shared/`
+de manera unilateral.
+```
+
 No editar `.env.example`: su `MOCK_PORT` pertenece al proceso del mock y no es
 la base pública del cliente.
 
@@ -474,7 +495,6 @@ git commit -m "feat: configure client API base"
 - Create: `tests/types/shared-contract.test.ts`
 - Modify: `src/shared/contract.ts`
 - Modify: `package.json`
-- Modify: `README.md`
 - Modify: `openspec/changes/prepare-parallel-development/tasks.md`
 
 - [ ] **Step 1: Crear la prueba de tipos generada desde el fixture**
@@ -678,18 +698,11 @@ export type ProjectAnalysis = Readonly<{
 No conservar `ProjectCollectionItem`: no tiene consumidores y el nombre
 canónico del esquema publicado es `ProjectListItem`.
 
-- [ ] **Step 4: Declarar `src/shared/` cerrado**
+- [ ] **Step 4: Confirmar que la frontera sigue declarada cerrada**
 
-Añadir al README:
-
-```markdown
-## Contrato compartido durante el trabajo paralelo
-
-`src/shared/contract.ts` contiene el contrato HTTP completo que consumen
-backend y frontend y queda cerrado durante esta fase. Si una vía necesita otro
-tipo, debe detenerse y reportar la divergencia; no debe ampliar `src/shared/`
-de manera unilateral.
-```
+Releer la sección `Contrato compartido durante el trabajo paralelo` añadida en
+la tarea anterior y confirmar que la implementación no requiere ampliar la
+lista aprobada de trece exportaciones.
 
 - [ ] **Step 5: Verificar GREEN y auditar el contrato**
 
@@ -717,7 +730,7 @@ sed -n '39,75p' docs/adr/009-contrato-errores-api.md
 - [ ] **Step 6: Marcar tareas OpenSpec 3.1–3.3 y crear commit**
 
 ```bash
-git add -- tests/types/shared-contract.test.ts src/shared/contract.ts package.json README.md openspec/changes/prepare-parallel-development/tasks.md
+git add -- tests/types/shared-contract.test.ts src/shared/contract.ts package.json openspec/changes/prepare-parallel-development/tasks.md
 git diff --cached --check
 git commit -m "feat: freeze shared HTTP contract types"
 ```
