@@ -14,7 +14,7 @@
 ## 3. Real App Router surface
 
 - [x] 3.1 Implement `GET` and `POST /projects` and `GET`, `PUT` and `DELETE /projects/{projectId}` as thin use-case adapters.
-- [ ] 3.2 Implement `POST /projects/{projectId}/activities` and `PUT` and `DELETE /projects/{projectId}/activities/{activityId}` as thin use-case adapters.
+- [x] 3.2 Implement `POST /projects/{projectId}/activities` and `PUT` and `DELETE /projects/{projectId}/activities/{activityId}` as thin use-case adapters.
 - [ ] 3.3 Run the focused contract suite until every real and mock HTTP scenario passes, then run typecheck, lint and the structural review to confirm no formulas, invented routes or forbidden dependencies were introduced.
 
 ## 4. Architecture documentation

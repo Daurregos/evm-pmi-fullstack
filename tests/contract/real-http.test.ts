@@ -79,6 +79,25 @@ function projectWrite(
   };
 }
 
+function fixtureActivity(): JsonObject {
+  return (
+    ((fixture.readResponse as JsonObject).activities as JsonValue[])[0] as
+      JsonObject
+  );
+}
+
+function activityWrite(overrides: JsonObject = {}): JsonObject {
+  const activity = fixtureActivity();
+  return {
+    name: activity.name,
+    bac: activity.bac,
+    plannedProgress: activity.plannedProgress,
+    actualProgress: activity.actualProgress,
+    ac: activity.ac,
+    ...overrides,
+  };
+}
+
 before(async () => {
   await databaseLock.acquire();
 });
@@ -223,6 +242,80 @@ test("missing project replacement and deletion return 404", async () => {
     jsonRequest("PUT", projectWrite()),
   );
   await assertNotFound("/projects/999999", jsonRequest("DELETE"));
+});
+
+test("POST nested activity returns 201 with fixture-derived ActivityRead", async () => {
+  const response = await request(
+    "/projects/2/activities",
+    jsonRequest("POST", activityWrite()),
+  );
+
+  assert.equal(
+    response.status,
+    ((fixture.successResponses as JsonObject).createActivity as JsonObject)
+      .expectedStatus,
+  );
+  const body = response.body as JsonObject;
+  assert.equal(Number.isInteger(body.id), true);
+  assert.deepEqual(body, {
+    ...(stripMetadata(fixtureActivity()) as JsonObject),
+    id: body.id,
+  });
+});
+
+test("PUT nested activity returns the exact fixture ActivityRead", async () => {
+  const response = await request(
+    "/projects/1/activities/1",
+    jsonRequest("PUT", activityWrite()),
+  );
+
+  assert.equal(
+    response.status,
+    ((fixture.successResponses as JsonObject).replaceActivity as JsonObject)
+      .expectedStatus,
+  );
+  assert.deepEqual(response.body, stripMetadata(fixtureActivity()));
+});
+
+test("activity mutation is followed by a separate aggregate read", async () => {
+  const created = await request(
+    "/projects/2/activities",
+    jsonRequest("POST", activityWrite()),
+  );
+  assert.equal(created.status, 201);
+
+  const afterCreate = (await request("/projects/2")).body as JsonObject;
+  assert.deepEqual(afterCreate.activities, [created.body]);
+
+  const activityId = String((created.body as JsonObject).id);
+  const deleted = await request(
+    `/projects/2/activities/${activityId}`,
+    jsonRequest("DELETE"),
+  );
+  assert.equal(deleted.status, 204);
+  assert.equal(deleted.raw, "");
+
+  const afterDelete = await request("/projects/2");
+  assert.deepEqual(afterDelete.body, stripMetadata(fixture.emptyProject));
+});
+
+test("activity create, replacement and deletion respect project scope", async () => {
+  await assertNotFound(
+    "/projects/999999/activities",
+    jsonRequest("POST", activityWrite()),
+  );
+  await assertNotFound(
+    "/projects/2/activities/1",
+    jsonRequest("PUT", activityWrite()),
+  );
+  await assertNotFound(
+    "/projects/1/activities/999999",
+    jsonRequest("PUT", activityWrite()),
+  );
+  await assertNotFound(
+    "/projects/1/activities/999999",
+    jsonRequest("DELETE"),
+  );
 });
 
 async function assertMalformed(
