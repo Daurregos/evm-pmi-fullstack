@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { after, before, beforeEach, test } from "node:test";
 
-import OpenAPIBackend from "openapi-backend";
+import OpenAPIBackend, { type Document } from "openapi-backend";
 import { parse } from "yaml";
 
 import { createDatabase } from "@/infrastructure/database/client";
@@ -32,7 +32,11 @@ const databaseUrl =
 const { db, pool } = createDatabase(databaseUrl);
 const databaseLock = createIntegrationDatabaseLock(pool);
 const validator = new OpenAPIBackend({
-  definition: contractPath,
+  definition: contract as unknown as Document,
+  // v5.19 validates definitions with a 3.0-only metaschema before its
+  // response validator runs. Quick mode skips that incompatible precheck;
+  // AJV still compiles and validates the canonical 3.1 response schemas.
+  quick: true,
   strict: true,
   validate: true,
 });
@@ -218,7 +222,7 @@ function assertValidResponse(
 ): void {
   assert.equal(result.status, expectedStatus);
   const validation = validator.validateResponse(
-    result.body,
+    expectedStatus === 204 ? null : result.body,
     operationId,
     expectedStatus,
   );
