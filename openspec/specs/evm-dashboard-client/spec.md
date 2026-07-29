@@ -95,8 +95,10 @@ graficar y ordenar. Un índice no evaluable MUST mostrarse como ausente.
 ### Requirement: El cliente formatea montos y avance
 
 Los montos MUST presentarse con dos decimales, coma decimal, punto de millar y
-`−` para el negativo. El avance MUST presentarse como porcentaje entero. Los
-empates exactos MUST resolverse alejándose de cero. El cliente MUST NOT
+`−` para el negativo. El avance del proyecto MUST presentarse como porcentaje
+entero. Los porcentajes capturados —el avance planificado y el avance real—
+MUST presentarse con los decimales registrados, sin decimales fijos ni relleno.
+Los empates exactos MUST resolverse alejándose de cero. El cliente MUST NOT
 redondear los valores que envía ni derivar indicadores.
 
 #### Scenario: Montos del consolidado
@@ -108,6 +110,11 @@ redondear los valores que envía ni derivar indicadores.
 
 - **WHEN** `progress` llega sin redondear
 - **THEN** se presenta como porcentaje entero
+
+#### Scenario: Porcentaje capturado con decimales
+
+- **WHEN** `plannedProgress` o `actualProgress` llegan con decimales
+- **THEN** se presentan con esos decimales, sin redondearlos a entero
 
 ### Requirement: Gráfica de PV, EV y AC por actividad
 

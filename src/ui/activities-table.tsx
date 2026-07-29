@@ -2,8 +2,8 @@ import type { ActivityRead } from "@/shared/contract";
 
 import {
   formatAmount,
+  formatCapturedPercentage,
   formatOptionalAmount,
-  formatPercentage,
 } from "@/ui/format";
 import { IndexBadge } from "@/ui/index-badge";
 
@@ -15,7 +15,11 @@ export interface ActivitiesTableProps {
  * RF-06: cada fila muestra los cinco datos capturados y los ocho indicadores
  * derivados. La rebanada es de solo lectura: no hay controles de edición.
  *
- * Catorce columnas no caben en una pantalla estrecha, así que la tabla desplaza
+ * El nombre encabeza la fila, porque es lo que identifica a la actividad para
+ * quien lee; el identificador queda en `data-row-id`, disponible para el
+ * marcado sin ocupar una columna que no dice nada.
+ *
+ * Trece columnas no caben en una pantalla estrecha, así que la tabla desplaza
  * dentro de su propio contenedor en lugar de desplazar la página.
  */
 export function ActivitiesTable({ activities }: ActivitiesTableProps) {
@@ -27,9 +31,6 @@ export function ActivitiesTable({ activities }: ActivitiesTableProps) {
         </caption>
         <thead>
           <tr>
-            <th className="activities__id" scope="col">
-              #
-            </th>
             <th className="activities__name" scope="col">
               Actividad
             </th>
@@ -50,20 +51,17 @@ export function ActivitiesTable({ activities }: ActivitiesTableProps) {
         <tbody>
           {activities.map((activity) => (
             <tr data-row-id={activity.id} key={activity.id}>
-              <th className="activities__id" scope="row">
-                {activity.id}
-              </th>
-              <td className="activities__name" data-field="name">
+              <th className="activities__name" data-field="name" scope="row">
                 {activity.name}
-              </td>
+              </th>
               <td className="activities__amount" data-field="bac">
                 {formatAmount(activity.bac)}
               </td>
               <td className="activities__amount" data-field="plannedProgress">
-                {formatPercentage(activity.plannedProgress)}
+                {formatCapturedPercentage(activity.plannedProgress)}
               </td>
               <td className="activities__amount" data-field="actualProgress">
-                {formatPercentage(activity.actualProgress)}
+                {formatCapturedPercentage(activity.actualProgress)}
               </td>
               <td className="activities__amount" data-field="ac">
                 {formatAmount(activity.ac)}

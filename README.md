@@ -53,7 +53,11 @@ Reparto de responsabilidades en la presentación:
   (ADR-004); el cliente no los deriva. `value` solo alimenta la gráfica.
 - Los montos y los porcentajes cruzan sin redondear y el cliente los presenta:
   montos con dos decimales, coma decimal, punto de millar y `−` para el
-  negativo; los porcentajes, enteros.
+  negativo; el avance del proyecto como porcentaje entero y los porcentajes
+  capturados con los decimales registrados, según el PRD §7.4.
+- La gráfica y la primera columna de la tabla identifican cada actividad por su
+  nombre. En la gráfica se recorta cuando es largo; la tabla lo muestra
+  completo.
 - El estado visual proviene de `status`. `neutral` y `not_evaluable` comparten
   apariencia, como pide RF-08, y siguen siendo estados distintos en el código y
   en el marcado.
@@ -83,9 +87,12 @@ Deuda no bloqueante posterior al andamiaje:
 - Con `PV = 0` y `SV` positivo, RF-08 permite mostrar «avance anticipado». No se
   implementa: el contrato no lleva campo para esa nota y derivarla en el cliente
   sería interpretación, contra ADR-001. Requiere decidir un campo del contrato.
-- Los porcentajes capturados se muestran redondeados a entero, según el PRD
-  §7.4. Cuando B2 añada edición, el formulario debe recibir el valor sin
-  redondear para no perder centésimas al reenviarlo.
+- ADR-003 conserva la frase indiferenciada «redondea montos e índices a dos
+  decimales y el avance a porcentaje entero». Bajo el glosario del PRD §3 ese
+  «avance» es el del proyecto, pero el texto no lo dice, así que es el único
+  artefacto autoritativo que quedó sin desambiguar después de aclarar el PRD
+  §7.4, la spec del dashboard y `docs/ASSUMPTIONS.md`. Corregirlo exige el flujo
+  de ADR.
 
 Alcance heredado por B2 para las mutaciones del cliente:
 

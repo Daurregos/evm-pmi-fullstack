@@ -6,9 +6,9 @@ import { ActivitiesTable } from "../../src/ui/activities-table";
 import {
   ABSENT_VALUE,
   formatAmount,
+  formatCapturedPercentage,
   formatIndexDisplay,
   formatOptionalAmount,
-  formatPercentage,
 } from "../../src/ui/format";
 import { indexGlyph } from "../../src/ui/index-status";
 import {
@@ -17,11 +17,22 @@ import {
   tableRows,
   visibleText,
 } from "./render";
-import { referenceAnalysis } from "./simulated-api";
+import { bandCaseInput, referenceAnalysis } from "./simulated-api";
 
 const activities = referenceAnalysis.activities;
 const markup = renderMarkup(<ActivitiesTable activities={activities} />);
 const rows = tableRows(markup);
+const header = markup.slice(0, markup.indexOf("</thead>"));
+
+/** Encabezados de fila y de columna, en orden de aparición. */
+function headings(source: string, scope: "col" | "row"): string[] {
+  const pattern = new RegExp(
+    `<th[^>]*scope="${scope}"[^>]*>([\\s\\S]*?)</th>`,
+    "g",
+  );
+
+  return [...source.matchAll(pattern)].map(([, inner]) => visibleText(inner));
+}
 
 /** Los cinco datos capturados y los ocho indicadores de RF-06, en orden. */
 const CAPTURED_FIELDS = [
@@ -53,14 +64,14 @@ function indexCellText(index: IndexResult): string {
 function expectedCells(activity: ActivityRead): Record<string, string> {
   return {
     ac: formatAmount(activity.ac),
-    actualProgress: formatPercentage(activity.actualProgress),
+    actualProgress: formatCapturedPercentage(activity.actualProgress),
     bac: formatAmount(activity.bac),
     cpi: indexCellText(activity.cpi),
     cv: formatAmount(activity.cv),
     eac: formatOptionalAmount(activity.eac),
     ev: formatAmount(activity.ev),
     name: activity.name,
-    plannedProgress: formatPercentage(activity.plannedProgress),
+    plannedProgress: formatCapturedPercentage(activity.plannedProgress),
     pv: formatAmount(activity.pv),
     spi: indexCellText(activity.spi),
     sv: formatAmount(activity.sv),
@@ -99,8 +110,43 @@ for (const activity of activities) {
   });
 }
 
+test("a captured percentage with decimals is not rounded to a whole percent", () => {
+  const captured = bandCaseInput("B1");
+  const [activity] = activities;
+  const [row] = tableRows(
+    renderMarkup(
+      <ActivitiesTable
+        activities={[
+          {
+            ...activity,
+            actualProgress: captured.actualProgress,
+            plannedProgress: captured.plannedProgress,
+          },
+        ]}
+      />,
+    ),
+  );
+
+  assert.equal(visibleText(row.cells.plannedProgress), "49,45 %");
+  assert.equal(visibleText(row.cells.actualProgress), "49,45 %");
+});
+
+test("each row is headed by the activity name, not by its identifier", () => {
+  assert.deepEqual(
+    headings(markup.slice(markup.indexOf("<tbody")), "row"),
+    activities.map((activity) => activity.name),
+  );
+});
+
+test("the first column is the activity name", () => {
+  const columns = headings(header, "col");
+
+  assert.equal(columns[0], "Actividad");
+  assert.equal(columns.length, 13);
+});
+
 test("the header names the captured data and the derived indicators", () => {
-  const header = visibleText(markup.slice(0, markup.indexOf("</thead>")));
+  const headerText = visibleText(header);
 
   for (const heading of [
     "BAC",
@@ -114,7 +160,10 @@ test("the header names the captured data and the derived indicators", () => {
     "EAC",
     "VAC",
   ]) {
-    assert.ok(header.includes(heading), `Expected ${heading} in: ${header}`);
+    assert.ok(
+      headerText.includes(heading),
+      `Expected ${heading} in: ${headerText}`,
+    );
   }
 });
 

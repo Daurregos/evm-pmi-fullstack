@@ -90,16 +90,20 @@ export interface TableRow {
   readonly fields: readonly string[];
 }
 
-/** Filas de una tabla, indexadas por `data-row-id` y `data-field`. */
+/**
+ * Filas de una tabla, indexadas por `data-row-id` y `data-field`. La celda que
+ * encabeza la fila es un `th`, así que ambas etiquetas cuentan como celda.
+ */
 export function tableRows(markup: string): TableRow[] {
   const rowPattern = /<tr[^>]*data-row-id="([^"]*)"[^>]*>([\s\S]*?)<\/tr>/g;
-  const cellPattern = /<td[^>]*data-field="([^"]*)"[^>]*>([\s\S]*?)<\/td>/g;
+  const cellPattern =
+    /<(td|th)[^>]*data-field="([^"]*)"[^>]*>([\s\S]*?)<\/\1>/g;
 
   return [...markup.matchAll(rowPattern)].map(([, id, rowMarkup]) => {
     const cells: Record<string, string> = {};
     const fields: string[] = [];
 
-    for (const [, field, cellMarkup] of rowMarkup.matchAll(cellPattern)) {
+    for (const [, , field, cellMarkup] of rowMarkup.matchAll(cellPattern)) {
       cells[field] = cellMarkup;
       fields.push(field);
     }

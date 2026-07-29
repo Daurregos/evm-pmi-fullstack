@@ -45,11 +45,26 @@ export function formatOptionalAmount(value: number | null): string {
   return value === null ? ABSENT_VALUE : formatAmount(value);
 }
 
-/** Porcentaje entero, como pide el PRD §7.4 para el avance. */
-export function formatPercentage(value: number | null): string {
+/**
+ * Avance del proyecto: porcentaje entero, como pide el PRD §7.4 para el
+ * indicador derivado del consolidado.
+ */
+export function formatProgress(value: number | null): string {
   return value === null
     ? ABSENT_VALUE
     : `${toSpanishNumber(value.toFixed(0))} %`;
+}
+
+/**
+ * Avance planificado o real de una actividad. Es un dato capturado, no un
+ * indicador derivado: se presenta con los decimales que trae, porque
+ * redondearlo perdería lo que la persona registró.
+ *
+ * La conversión conserva la representación más corta que reproduce el número,
+ * de modo que un entero no gana decimales y `49,45` no pierde ninguno.
+ */
+export function formatCapturedPercentage(value: number): string {
+  return `${toSpanishNumber(String(value))} %`;
 }
 
 /**

@@ -4,11 +4,12 @@ import { test } from "node:test";
 import {
   ABSENT_VALUE,
   formatAmount,
+  formatCapturedPercentage,
   formatIndexDisplay,
   formatOptionalAmount,
-  formatPercentage,
+  formatProgress,
 } from "../../src/ui/format";
-import { referenceAnalysis } from "./simulated-api";
+import { bandCaseInput, referenceAnalysis } from "./simulated-api";
 
 test("amounts use two decimals, a decimal comma and a thousands dot", () => {
   // Criterio literal de RF-03 sobre los valores de su ejemplo.
@@ -42,19 +43,35 @@ test("zero and negative zero carry no sign", () => {
   assert.equal(formatAmount(-0), "0,00");
 });
 
-test("percentages are presented as whole percents", () => {
-  const { activities, summary } = referenceAnalysis;
-  const [first] = activities;
+test("the project progress is presented as a whole percent", () => {
+  const { summary } = referenceAnalysis;
 
-  assert.equal(formatPercentage(first.plannedProgress), "40 %");
-  assert.equal(formatPercentage(first.actualProgress), "50 %");
-  assert.equal(formatPercentage(summary.progress), "33 %");
-  assert.equal(formatPercentage(0), "0 %");
+  assert.equal(formatProgress(summary.progress), "33 %");
+  assert.equal(formatProgress(0), "0 %");
+  assert.equal(formatProgress(49.45), "49 %");
+});
+
+test("a captured percentage keeps the decimals it was captured with", () => {
+  // El fixture escribe los capturados de su caso de banda con dos decimales.
+  const { actualProgress, plannedProgress } = bandCaseInput("B1");
+
+  assert.equal(plannedProgress, 49.45);
+  assert.equal(formatCapturedPercentage(plannedProgress), "49,45 %");
+  assert.equal(formatCapturedPercentage(actualProgress), "49,45 %");
+});
+
+test("a captured percentage without decimals shows none", () => {
+  const [first] = referenceAnalysis.activities;
+
+  assert.equal(formatCapturedPercentage(first.plannedProgress), "40 %");
+  assert.equal(formatCapturedPercentage(first.actualProgress), "50 %");
+  assert.equal(formatCapturedPercentage(0), "0 %");
+  assert.equal(formatCapturedPercentage(100), "100 %");
 });
 
 test("an absent value is presented as absent, never as zero", () => {
   assert.equal(formatOptionalAmount(null), ABSENT_VALUE);
-  assert.equal(formatPercentage(null), ABSENT_VALUE);
+  assert.equal(formatProgress(null), ABSENT_VALUE);
   assert.equal(formatIndexDisplay(null), ABSENT_VALUE);
   assert.notEqual(ABSENT_VALUE, "0,00");
 });
