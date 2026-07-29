@@ -1,8 +1,8 @@
 import { getEvmUseCases } from "@/infrastructure/http/evm-use-cases";
 import { parseActivityWrite } from "@/infrastructure/http/request";
 import {
+  applicationResultResponse,
   malformedRequest,
-  useCaseResponse,
 } from "@/infrastructure/http/response";
 
 interface ActivityRouteContext {
@@ -19,7 +19,7 @@ export async function PUT(
   }
 
   const { activityId, projectId } = await context.params;
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().replaceActivity(
       Number(projectId),
       Number(activityId),
@@ -34,7 +34,7 @@ export async function DELETE(
   context: ActivityRouteContext,
 ): Promise<Response> {
   const { activityId, projectId } = await context.params;
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().deleteActivity(
       Number(projectId),
       Number(activityId),

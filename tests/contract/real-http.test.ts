@@ -318,6 +318,17 @@ test("activity create, replacement and deletion respect project scope", async ()
   );
 });
 
+test("flat activities and indicator resources do not resolve", async () => {
+  for (const pathname of [
+    "/activities",
+    "/projects/1/indicators",
+    "/projects/1/activities/1/indicators",
+  ]) {
+    const response = await fetch(`${baseUrl}${pathname}`);
+    assert.equal(response.status, 404, pathname);
+  }
+});
+
 type ValidationCheck = {
   $id: string;
   expectedBody: JsonObject;

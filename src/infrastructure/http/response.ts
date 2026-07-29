@@ -28,7 +28,7 @@ export function jsonSuccess(value: unknown, status: 200 | 201): Response {
   return Response.json(value, { status });
 }
 
-export function useCaseResponse<T>(
+export function applicationResultResponse<T>(
   result: UseCaseResult<T>,
   status: 200 | 201 | 204,
 ): Response {

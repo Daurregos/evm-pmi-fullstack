@@ -1,9 +1,9 @@
 import { getEvmUseCases } from "@/infrastructure/http/evm-use-cases";
 import { parseProjectWrite } from "@/infrastructure/http/request";
 import {
+  applicationResultResponse,
   jsonSuccess,
   malformedRequest,
-  useCaseResponse,
 } from "@/infrastructure/http/response";
 
 export async function GET(): Promise<Response> {
@@ -16,7 +16,7 @@ export async function POST(request: Request): Promise<Response> {
     return malformedRequest();
   }
 
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().createProject(parsed.value),
     201,
   );

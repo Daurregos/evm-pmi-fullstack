@@ -425,7 +425,7 @@ export function jsonSuccess(value: unknown, status: 200 | 201): Response {
   return Response.json(value, { status });
 }
 
-export function useCaseResponse<T>(
+export function applicationResultResponse<T>(
   result: UseCaseResult<T>,
   status: 200 | 201 | 204,
 ): Response {
@@ -508,7 +508,7 @@ import { parseProjectWrite } from "@/infrastructure/http/request";
 import {
   jsonSuccess,
   malformedRequest,
-  useCaseResponse,
+  applicationResultResponse,
 } from "@/infrastructure/http/response";
 
 export async function GET(): Promise<Response> {
@@ -518,7 +518,7 @@ export async function GET(): Promise<Response> {
 export async function POST(request: Request): Promise<Response> {
   const parsed = await parseProjectWrite(request);
   if (!parsed.ok) return malformedRequest();
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().createProject(parsed.value),
     201,
   );
@@ -536,7 +536,7 @@ import {
   jsonSuccess,
   malformedRequest,
   notFound,
-  useCaseResponse,
+  applicationResultResponse,
 } from "@/infrastructure/http/response";
 
 interface ProjectRouteContext {
@@ -563,7 +563,7 @@ export async function PUT(
 ): Promise<Response> {
   const parsed = await parseProjectWrite(request);
   if (!parsed.ok) return malformedRequest();
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().replaceProject(
       await projectId(context),
       parsed.value,
@@ -576,7 +576,7 @@ export async function DELETE(
   _request: Request,
   context: ProjectRouteContext,
 ): Promise<Response> {
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().deleteProject(await projectId(context)),
     204,
   );
@@ -640,7 +640,7 @@ import { getEvmUseCases } from "@/infrastructure/http/evm-use-cases";
 import { parseActivityWrite } from "@/infrastructure/http/request";
 import {
   malformedRequest,
-  useCaseResponse,
+  applicationResultResponse,
 } from "@/infrastructure/http/response";
 
 interface ActivityCollectionContext {
@@ -654,7 +654,7 @@ export async function POST(
   const parsed = await parseActivityWrite(request);
   if (!parsed.ok) return malformedRequest();
   const { projectId } = await context.params;
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().createActivity(Number(projectId), parsed.value),
     201,
   );
@@ -671,7 +671,7 @@ import { getEvmUseCases } from "@/infrastructure/http/evm-use-cases";
 import { parseActivityWrite } from "@/infrastructure/http/request";
 import {
   malformedRequest,
-  useCaseResponse,
+  applicationResultResponse,
 } from "@/infrastructure/http/response";
 
 interface ActivityRouteContext {
@@ -685,7 +685,7 @@ export async function PUT(
   const parsed = await parseActivityWrite(request);
   if (!parsed.ok) return malformedRequest();
   const { activityId, projectId } = await context.params;
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().replaceActivity(
       Number(projectId),
       Number(activityId),
@@ -700,7 +700,7 @@ export async function DELETE(
   context: ActivityRouteContext,
 ): Promise<Response> {
   const { activityId, projectId } = await context.params;
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().deleteActivity(
       Number(projectId),
       Number(activityId),

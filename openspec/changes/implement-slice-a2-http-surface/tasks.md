@@ -1,7 +1,7 @@
 ## 1. Contract-first HTTP tests
 
 - [x] 1.1 Extend the contract runner so one Next.js process exercises both the retained mock suite and serial real-route tests against migrated PostgreSQL.
-- [ ] 1.2 Add fixture-backed failing tests for the project collection, exact aggregate read, all success statuses and bodies, bodyless deletes, complete replacements, missing resources and absence of invented routes.
+- [x] 1.2 Add fixture-backed failing tests for the project collection, exact aggregate read, all success statuses and bodies, bodyless deletes, complete replacements, missing resources and absence of invented routes.
 - [x] 1.3 Add fixture-backed failing tests for malformed JSON, incompatible known types and date formats, all thirteen validation checks, the required-field missing/null matrix, public error shape and violation accumulation without message or order coupling.
 - [x] 1.4 Add failing state-intact tests that seed `readResponse`, reject structural and business-invalid writes, and prove the subsequent aggregate read is exactly unchanged.
 
@@ -15,7 +15,7 @@
 
 - [x] 3.1 Implement `GET` and `POST /projects` and `GET`, `PUT` and `DELETE /projects/{projectId}` as thin use-case adapters.
 - [x] 3.2 Implement `POST /projects/{projectId}/activities` and `PUT` and `DELETE /projects/{projectId}/activities/{activityId}` as thin use-case adapters.
-- [ ] 3.3 Run the focused contract suite until every real and mock HTTP scenario passes, then run typecheck, lint and the structural review to confirm no formulas, invented routes or forbidden dependencies were introduced.
+- [x] 3.3 Run the focused contract suite until every real and mock HTTP scenario passes, then run typecheck, lint and the structural review to confirm no formulas, invented routes or forbidden dependencies were introduced.
 
 ## 4. Architecture documentation
 

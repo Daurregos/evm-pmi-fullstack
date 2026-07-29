@@ -1,10 +1,10 @@
 import { getEvmUseCases } from "@/infrastructure/http/evm-use-cases";
 import { parseProjectWrite } from "@/infrastructure/http/request";
 import {
+  applicationResultResponse,
   jsonSuccess,
   malformedRequest,
   notFound,
-  useCaseResponse,
 } from "@/infrastructure/http/response";
 
 interface ProjectRouteContext {
@@ -35,7 +35,7 @@ export async function PUT(
     return malformedRequest();
   }
 
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().replaceProject(
       await projectId(context),
       parsed.value,
@@ -48,7 +48,7 @@ export async function DELETE(
   _request: Request,
   context: ProjectRouteContext,
 ): Promise<Response> {
-  return useCaseResponse(
+  return applicationResultResponse(
     await getEvmUseCases().deleteProject(await projectId(context)),
     204,
   );
