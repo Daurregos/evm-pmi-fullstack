@@ -19,8 +19,8 @@
 
 ## 4. Verify and close the change
 
-- [ ] 4.1 Run fresh policy tests, lint, import lint, typecheck, coverage, build and `git diff --check`, reading the complete outputs.
-- [ ] 4.2 Run the contract suite, mutate canonical data manually through the real backend, and rerun the suite without external cleanup.
+- [x] 4.1 Run fresh policy tests, lint, import lint, typecheck, coverage, build and `git diff --check`, reading the complete outputs.
+- [x] 4.2 Run the contract suite, mutate canonical data manually through the real backend, and rerun the suite without external cleanup.
 - [x] 4.3 Temporarily raise one threshold above its actual result, demonstrate a nonzero policy exit, restore the approved value and rerun the green gate.
-- [ ] 4.4 Audit reported files, HTML, actual percentages, uncovered domain branches, exclusions, ADR verification statements, OpenSpec requirements, diff territory and commit contents.
-- [ ] 4.5 Archive the verified OpenSpec change, preserve the isolated worktree and branch, and prepare the final report and develop-targeted PR status without merging.
+- [x] 4.4 Audit reported files, HTML, actual percentages, uncovered domain branches, exclusions, ADR verification statements, OpenSpec requirements, diff territory and commit contents.
+- [x] 4.5 Archive the verified OpenSpec change, preserve the isolated worktree and branch, and prepare the final report and develop-targeted PR status without merging.
