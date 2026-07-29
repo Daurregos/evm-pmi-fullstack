@@ -43,6 +43,21 @@ type FixtureBandCase = Readonly<{
   }>;
 }>;
 
+type FixtureSummary = Readonly<{
+  bac: number;
+  pv: number;
+  ev: number;
+  ac: number;
+  cv: number;
+  sv: number;
+  cpi: FixtureIndex;
+  spi: FixtureIndex;
+  eac: number | null;
+  vac: number | null;
+  progress: number | null;
+  activitiesWithEvAndZeroAc: number;
+}>;
+
 const stateByFixture = {
   SIN_INICIAR: "not_started",
   SIN_AVANCE_CON_PLAN_VIGENTE: "planned_without_progress",
@@ -59,9 +74,15 @@ const fixture = JSON.parse(
 ) as {
   readResponse: {
     activities: FixtureActivity[];
-    summary: { cpi: FixtureIndex };
+    summary: FixtureSummary;
   };
+  emptyProject: { summary: FixtureSummary };
   neutralBandChecks: { cases: FixtureBandCase[] };
+  negativeChecks: {
+    cpiAsAverageOfIndices: number;
+    eacAsSumOfActivityEacs: number;
+    eacFromRoundedCpi: number;
+  };
 };
 
 function activityInput(activity: {
@@ -208,4 +229,55 @@ test("matches all seven unrounded neutral-band checks", () => {
     assertIndex(result.cpi, bandCase.$expected.cpi, `${bandCase.$id}.cpi`);
     assertIndex(result.spi, bandCase.$expected.spi, `${bandCase.$id}.spi`);
   }
+});
+
+test("matches the fixture project summary after summing magnitudes", () => {
+  const activities = fixture.readResponse.activities;
+  const summary = fixture.readResponse.summary;
+  const result = evm.consolidateProject(activities.map(activityInput));
+
+  for (const field of ["bac", "pv", "ev", "ac", "cv", "sv"] as const) {
+    assertDecimal(result[field], summary[field], `summary.${field}`);
+  }
+  assertIndex(result.cpi, summary.cpi, "summary.cpi");
+  assertIndex(result.spi, summary.spi, "summary.spi");
+  assertDecimal(result.eac, summary.eac, "summary.eac");
+  assertDecimal(result.vac, summary.vac, "summary.vac");
+  assertDecimal(result.progress, summary.progress, "summary.progress");
+  assert.equal(
+    result.activitiesWithEvAndZeroAc,
+    summary.activitiesWithEvAndZeroAc,
+  );
+});
+
+test("matches the empty project summary", () => {
+  const result = evm.consolidateProject([]);
+  const summary = fixture.emptyProject.summary;
+
+  for (const field of ["bac", "pv", "ev", "ac", "cv", "sv"] as const) {
+    assertDecimal(result[field], summary[field], `empty.${field}`);
+  }
+  assertIndex(result.cpi, summary.cpi, "empty.cpi");
+  assertIndex(result.spi, summary.spi, "empty.spi");
+  assertDecimal(result.eac, summary.eac, "empty.eac");
+  assertDecimal(result.vac, summary.vac, "empty.vac");
+  assertDecimal(result.progress, summary.progress, "empty.progress");
+  assert.equal(
+    result.activitiesWithEvAndZeroAc,
+    summary.activitiesWithEvAndZeroAc,
+  );
+});
+
+test("rejects fixture negative consolidation strategies explicitly", () => {
+  const result = evm.consolidateProject(
+    fixture.readResponse.activities.map(activityInput),
+  );
+  const negative = fixture.negativeChecks;
+
+  assert.notEqual(
+    result.cpi.value?.toNumber(),
+    negative.cpiAsAverageOfIndices,
+  );
+  assert.notEqual(result.eac?.toNumber(), negative.eacAsSumOfActivityEacs);
+  assert.notEqual(result.eac?.toNumber(), negative.eacFromRoundedCpi);
 });

@@ -50,14 +50,14 @@
 
 ## 5. Implementar la consolidación con TDD
 
-- [ ] 5.1 Cargar directamente el fixture y caracterizar el resumen de
+- [x] 5.1 Cargar directamente el fixture y caracterizar el resumen de
   referencia, incluidos avance, conteo de EV positivo con AC cero y proyecto
   vacío; cuando el comportamiento ya exista, registrar el primer GREEN,
   demostrar sensibilidad mediante una mutación temporal RED y restaurar el
   GREEN.
-- [ ] 5.2 Implementar `consolidateProject` sumando BAC, PV, EV y AC y delegando
+- [x] 5.2 Implementar `consolidateProject` sumando BAC, PV, EV y AC y delegando
   los resultados compartidos a la misma primitiva.
-- [ ] 5.3 Añadir las tres aserciones negativas explícitas contra
+- [x] 5.3 Añadir las tres aserciones negativas explícitas contra
   `negativeChecks` y confirmar que fallan ante las estrategias incorrectas y
   pasan con la implementación vigente.
 
