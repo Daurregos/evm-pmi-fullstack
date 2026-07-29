@@ -1,7 +1,7 @@
 ## 1. Specify the coverage policy in tests
 
-- [ ] 1.1 Add failing unit tests for counter aggregation, path scopes, inclusive four-metric thresholds, empty scopes and malformed summaries.
-- [ ] 1.2 Add failing unit tests that locate zero-count domain branch alternatives from detailed coverage data.
+- [x] 1.1 Add failing unit tests for counter aggregation, path scopes, inclusive four-metric thresholds, empty scopes and malformed summaries.
+- [x] 1.2 Add failing unit tests that locate zero-count domain branch alternatives from detailed coverage data.
 - [ ] 1.3 Add a failing structural test for the complete source universe, four justified exclusions, four reporters, ignored output and the shared CI command.
 
 ## 2. Implement collection and enforcement
