@@ -21,18 +21,35 @@ y deben retirarse cuando Next.js fije versiones corregidas.
 
 ## Deuda conocida
 
-`scripts/verify-decimal.mjs` es una sonda de viabilidad independiente, ya
-satisfecha y excluida de pruebas y CI. Se archivará o eliminará en el primer
-slice de fase 1, cuando el dominio cubra el fixture, los empates y el viaje JSON.
+El estado canónico de ejecución está en
+`openspec/changes/phase-0-project-scaffold/tasks.md`: 20 de 28 tareas están
+completas. El cambio no debe archivarse hasta resolver las siguientes tareas
+que bloquean el cierre:
 
-Las reglas de fronteras de imports y de uso decimal quedaron aisladas en
-`chore/phase-0-lint-rules-wip` (`ed0107f`). Por prioridad de tiempo no forman
-parte todavía de `npm test` ni de CI; deben retomarse antes de cerrar la fase 0.
+| Pendiente | Estado y siguiente acción |
+|---|---|
+| Reglas de fronteras y decimal | El trabajo está preservado en `chore/phase-0-lint-rules-wip` (`ed0107f`). Recuperar únicamente su configuración y pruebas, completar el ciclo rojo-verde y verificar que solo inspeccionen `src/`. |
+| Lint local | `npm run lint` no tiene todavía `eslint.config.mjs` y `npm run lint:imports` no tiene `tests/domain/architecture.test.ts`. Ambos comandos fallan deliberadamente hasta recuperar la rama anterior. |
+| CI completo | El workflow actual cubre instalación reproducible, migración, tipos y pruebas estructurales, de integración y de contrato con PostgreSQL. Añadir lint e imports cuando estén terminados; la sonda decimal debe permanecer excluida. |
+| Cierre OpenSpec | Ejecutar las verificaciones 8.1–8.4, revisar el cambio completo y archivar únicamente después de que CI incluya y supere lint/imports. |
 
-El workflow actual cubre instalación reproducible, migración, tipos y las
-pruebas estructurales, de integración y de contrato con PostgreSQL. El paso de
-lint se añadirá al recuperar la rama anterior.
+Seguimiento no bloqueante para el andamiaje mínimo:
 
-`npm audit` de producción no reporta vulnerabilidades. Permanecen avisos en
-herramientas de desarrollo transitivas de Drizzle Kit y ESLint cuyo arreglo
-automático exige cambios incompatibles.
+- Añadir una prueba de integración del borrado en cascada real; hoy se comprueba
+  la declaración `ON DELETE CASCADE` de la migración y del catálogo PostgreSQL.
+- Automatizar las regresiones de interrupción y servidor obsoleto del runner
+  contractual; `SIGINT`, `SIGTERM` y el rechazo de otra instancia se verificaron
+  manualmente. Evitar además duplicar en la prueba el algoritmo de limpieza de
+  claves `$`.
+- Fijar el digest de la imagen PostgreSQL y añadir una comprobación de deriva
+  entre el esquema Drizzle y la migración cuando se endurezca CI.
+- Evitar ejecuciones concurrentes del test de semilla sobre la misma base, pues
+  usa los identificadores canónicos del fixture.
+- Ejecutar `npm test` sin otro `next dev` activo en el mismo worktree; Next 16
+  protege el directorio con un único bloqueo aunque se usen puertos distintos.
+- `scripts/verify-decimal.mjs` es una sonda independiente ya satisfecha. Debe
+  archivarse o eliminarse en el primer slice de fase 1, cuando el dominio cubra
+  el fixture, los empates y el viaje JSON.
+- `npm audit --omit=dev` no reporta vulnerabilidades. Permanecen avisos en
+  dependencias transitivas de desarrollo de Drizzle Kit y ESLint cuya
+  corrección automática exige cambios incompatibles.
