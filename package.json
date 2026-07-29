@@ -1,0 +1,57 @@
+{
+  "name": "evm-pmi-fullstack",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run test:types && next build",
+    "env:up": "bash scripts/env-up.sh",
+    "env:down": "docker compose down",
+    "db:generate": "drizzle-kit generate --name phase_0",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx scripts/seed.ts",
+    "lint": "eslint .",
+    "lint:imports": "node --import tsx --test tests/domain/architecture.test.ts",
+    "typecheck": "npm run test:types && tsc --noEmit",
+    "test:client": "node --import tsx --test 'tests/client/*.test.ts' 'tests/client/*.test.tsx'",
+    "test:types": "node --import tsx --test tests/types/*.test.ts",
+    "test:structure": "node --import tsx --test tests/domain/*.test.ts",
+    "test:integration": "node --import tsx --test tests/integration/*.test.ts",
+    "test:contract": "tsx scripts/run-contract-tests.ts",
+    "test:coverage": "bash scripts/coverage.sh",
+    "test:coverage-policy": "node --import tsx --test 'tests/coverage/*.test.ts'",
+    "test": "bash scripts/test.sh"
+  },
+  "dependencies": {
+    "decimal.js": "10.6.0",
+    "drizzle-orm": "0.45.2",
+    "next": "16.2.12",
+    "pg": "8.22.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "recharts": "2.15.4",
+    "swagger-ui-dist": "5.32.11"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "@types/pg": "8.20.0",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "c8": "12.0.0",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.12",
+    "openapi-backend": "5.19.0",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3",
+    "yaml": "2.9.0"
+  },
+  "overrides": {
+    "postcss": "8.5.24",
+    "sharp": "0.35.3"
+  }
+}

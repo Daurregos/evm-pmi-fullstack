@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: evm
+      POSTGRES_USER: evm
+      POSTGRES_PASSWORD: evm
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evm -d evm"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - evm_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  evm_postgres_data:

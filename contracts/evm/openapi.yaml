@@ -1,0 +1,1021 @@
+openapi: 3.1.0
+info:
+  title: Seguimiento de Valor Ganado
+  version: 1.0.0
+  description: >-
+    Contrato del API EVM transcrito de las fuentes canónicas. info.version
+    sigue SemVer para el contrato; no versiona las rutas.
+paths:
+  /projects:
+    get:
+      operationId: listProjects
+      summary: Listar proyectos para el selector
+      description: >-
+        Devuelve un arreglo JSON desnudo con id y name por proyecto. Si no hay
+        proyectos, devuelve el arreglo vacío.
+      responses:
+        "200":
+          description: Proyectos disponibles para el selector.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectListItem"
+              examples:
+                projectCollection:
+                  $ref: "#/components/examples/ProjectCollection"
+                emptyProjectCollection:
+                  $ref: "#/components/examples/EmptyProjectCollection"
+    post:
+      operationId: createProject
+      summary: Crear un proyecto
+      description: >-
+        Crea un proyecto con su nombre y fecha de corte. La respuesta contiene
+        la representación de lectura del proyecto creado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectWrite"
+      responses:
+        "201":
+          description: Proyecto creado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectRead"
+              examples:
+                referenceProject:
+                  $ref: "#/components/examples/ReferenceProject"
+        "400":
+          $ref: "#/components/responses/MalformedRequest"
+        "422":
+          $ref: "#/components/responses/ProjectValidationFailed"
+  /projects/{projectId}:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    put:
+      operationId: replaceProject
+      summary: Reemplazar un proyecto
+      description: >-
+        Reemplaza todos los campos editables del proyecto. Un proyecto
+        inexistente responde 404 y no crea un recurso en esa URI, porque el
+        servidor asigna el identificador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectWrite"
+      responses:
+        "200":
+          description: Proyecto reemplazado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectRead"
+              examples:
+                referenceProject:
+                  $ref: "#/components/examples/ReferenceProject"
+        "400":
+          $ref: "#/components/responses/MalformedRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ProjectValidationFailed"
+    get:
+      operationId: getProject
+      summary: Consultar la foto analítica de un proyecto
+      description: >-
+        Devuelve el proyecto, todas sus actividades y el consolidado calculado
+        sincrónicamente desde los datos capturados.
+      responses:
+        "200":
+          description: Foto analítica del proyecto.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectAnalysis"
+              examples:
+                referenceProjectAnalysis:
+                  $ref: "#/components/examples/ReferenceProjectAnalysis"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteProject
+      summary: Eliminar un proyecto
+      description: >-
+        Elimina el proyecto y sus actividades. Un borrado repetido se trata
+        como recurso inexistente.
+      responses:
+        "204":
+          description: Proyecto eliminado; la respuesta no contiene cuerpo.
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /projects/{projectId}/activities:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    post:
+      operationId: createActivity
+      summary: Crear una actividad
+      description: >-
+        Crea una actividad dentro del proyecto. La respuesta contiene los
+        cinco datos capturados y los ocho indicadores calculados.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityWrite"
+      responses:
+        "201":
+          description: Actividad creada con sus indicadores.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityRead"
+              examples:
+                referenceActivity:
+                  $ref: "#/components/examples/ReferenceActivity"
+        "400":
+          $ref: "#/components/responses/MalformedRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ActivityValidationFailed"
+  /projects/{projectId}/activities/{activityId}:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+      - $ref: "#/components/parameters/ActivityId"
+    put:
+      operationId: replaceActivity
+      summary: Reemplazar una actividad
+      description: >-
+        Reemplaza los cinco datos capturados de la actividad. Una actividad o
+        su proyecto inexistentes responden 404 y no crean un recurso en esa
+        URI, porque el servidor asigna el identificador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityWrite"
+      responses:
+        "200":
+          description: Actividad reemplazada con sus indicadores recalculados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityRead"
+              examples:
+                referenceActivity:
+                  $ref: "#/components/examples/ReferenceActivity"
+        "400":
+          $ref: "#/components/responses/MalformedRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ActivityValidationFailed"
+    delete:
+      operationId: deleteActivity
+      summary: Eliminar una actividad
+      description: >-
+        Elimina la actividad del proyecto. Un borrado repetido se trata como
+        recurso inexistente.
+      responses:
+        "204":
+          description: Actividad eliminada; la respuesta no contiene cuerpo.
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      description: Identificador entero del proyecto.
+      schema:
+        type: integer
+    ActivityId:
+      name: activityId
+      in: path
+      required: true
+      description: Identificador entero de la actividad.
+      schema:
+        type: integer
+  schemas:
+    ProjectListItem:
+      type: object
+      additionalProperties: false
+      description: Proyecto mínimo disponible para el selector.
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          description: Identificador del proyecto.
+        name:
+          type: string
+          minLength: 1
+          description: Nombre normalizado del proyecto.
+    ProjectWrite:
+      type: object
+      description: >-
+        Datos admitidos al crear o reemplazar un proyecto. Por la consecuencia
+        declarada en ADR-009, el esquema publicado es menos restrictivo que las
+        reglas reales: admite null y propiedades adicionales para que negocio
+        distinga required, read_only y unknown. Un cliente generado no debe
+        equiparar nulabilidad ni propiedades adicionales con validez de
+        negocio.
+      required:
+        - name
+        - cutoffDate
+      properties:
+        name:
+          type:
+            - string
+            - "null"
+          minLength: 1
+          description: >-
+            Nombre obligatorio del proyecto. Se recortan los espacios laterales
+            antes de validar y persistir; un null o un resultado vacío produce
+            una infracción required.
+        cutoffDate:
+          type:
+            - string
+            - "null"
+          format: date
+          description: >-
+            Fecha de corte obligatoria como full-date de RFC 3339 con forma
+            YYYY-MM-DD. Un null explícito produce una infracción required.
+    ProjectRead:
+      type: object
+      additionalProperties: false
+      description: Representación de lectura de un proyecto.
+      required:
+        - id
+        - name
+        - cutoffDate
+      properties:
+        id:
+          type: integer
+          description: Identificador del proyecto.
+        name:
+          type: string
+          minLength: 1
+          description: Nombre normalizado del proyecto.
+        cutoffDate:
+          type: string
+          format: date
+          description: Fecha de corte del proyecto como full-date de RFC 3339.
+    ActivityWrite:
+      type: object
+      description: >-
+        Los cinco únicos datos capturados de una actividad. Por la consecuencia
+        declarada en ADR-009, el esquema publicado es menos restrictivo que las
+        reglas reales: admite null y propiedades adicionales para que negocio
+        distinga required, read_only y unknown. Un cliente generado no debe
+        equiparar nulabilidad ni propiedades adicionales con validez de
+        negocio.
+      required:
+        - name
+        - bac
+        - plannedProgress
+        - actualProgress
+        - ac
+      properties:
+        name:
+          type:
+            - string
+            - "null"
+          minLength: 1
+          description: >-
+            Nombre obligatorio de la actividad. Se recortan los espacios
+            laterales antes de validar y persistir; un null o un resultado vacío
+            produce una infracción required.
+        bac:
+          type:
+            - number
+            - "null"
+          exclusiveMinimum: 0
+          description: Presupuesto total planificado; debe ser positivo.
+        plannedProgress:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 100
+          description: Avance planificado entre 0 y 100, inclusive.
+        actualProgress:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 100
+          description: Avance real entre 0 y 100, inclusive.
+        ac:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          description: Costo real incurrido; no puede ser negativo.
+    ActivityRead:
+      type: object
+      additionalProperties: false
+      description: >-
+        Representación de lectura de una actividad con datos capturados e
+        indicadores derivados.
+      required:
+        - id
+        - name
+        - bac
+        - plannedProgress
+        - actualProgress
+        - ac
+        - pv
+        - ev
+        - cv
+        - sv
+        - cpi
+        - spi
+        - eac
+        - vac
+      properties:
+        id:
+          type: integer
+          description: Identificador de la actividad.
+        name:
+          type: string
+          minLength: 1
+          description: Nombre de la actividad.
+        bac:
+          type: number
+          exclusiveMinimum: 0
+          description: Presupuesto total planificado.
+        plannedProgress:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Avance planificado expresado entre 0 y 100.
+        actualProgress:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Avance real expresado entre 0 y 100.
+        ac:
+          type: number
+          minimum: 0
+          description: Costo real incurrido.
+        pv:
+          type: number
+          description: Valor planificado sin redondear.
+        ev:
+          type: number
+          description: Valor ganado sin redondear.
+        cv:
+          type: number
+          description: Variación de costo sin redondear.
+        sv:
+          type: number
+          description: Variación de cronograma sin redondear.
+        cpi:
+          $ref: "#/components/schemas/IndexResult"
+        spi:
+          $ref: "#/components/schemas/IndexResult"
+        eac:
+          type:
+            - number
+            - "null"
+          description: Estimación al completar, o null si no es evaluable.
+        vac:
+          type:
+            - number
+            - "null"
+          description: Variación al completar, o null si no es evaluable.
+    ProjectSummary:
+      type: object
+      additionalProperties: false
+      description: >-
+        Consolidado calculado después de sumar BAC, PV, EV y AC de todas las
+        actividades.
+      required:
+        - bac
+        - pv
+        - ev
+        - ac
+        - cv
+        - sv
+        - cpi
+        - spi
+        - eac
+        - vac
+        - progress
+        - activitiesWithEvAndZeroAc
+      properties:
+        bac:
+          type: number
+          description: Suma de BAC de las actividades.
+        pv:
+          type: number
+          description: Suma de PV de las actividades.
+        ev:
+          type: number
+          description: Suma de EV de las actividades.
+        ac:
+          type: number
+          description: Suma de AC de las actividades.
+        cv:
+          type: number
+          description: Variación consolidada de costo.
+        sv:
+          type: number
+          description: Variación consolidada de cronograma.
+        cpi:
+          $ref: "#/components/schemas/IndexResult"
+        spi:
+          $ref: "#/components/schemas/IndexResult"
+        eac:
+          type:
+            - number
+            - "null"
+          description: Estimación consolidada, o null si no es evaluable.
+        vac:
+          type:
+            - number
+            - "null"
+          description: Variación consolidada, o null si no es evaluable.
+        progress:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 100
+          description: Avance del proyecto, o null si no es evaluable.
+        activitiesWithEvAndZeroAc:
+          type: integer
+          minimum: 0
+          description: Cantidad de actividades con EV mayor que cero y AC cero.
+    ProjectAnalysis:
+      type: object
+      additionalProperties: false
+      description: Foto analítica completa del proyecto.
+      required:
+        - project
+        - activities
+        - summary
+      properties:
+        project:
+          $ref: "#/components/schemas/ProjectRead"
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityRead"
+        summary:
+          $ref: "#/components/schemas/ProjectSummary"
+    IndexResult:
+      type: object
+      additionalProperties: false
+      description: >-
+        Resultado de CPI o SPI. El objeto y sus cuatro miembros siempre están
+        presentes; solo value y display son nulables cuando el índice no es
+        evaluable.
+      required:
+        - value
+        - display
+        - status
+        - label
+      properties:
+        value:
+          type:
+            - number
+            - "null"
+          description: Valor completo sin redondear, o null si no es evaluable.
+        display:
+          type:
+            - string
+            - "null"
+          description: >-
+            Representación resuelta por el backend, incluido el marcador de
+            cruce de banda cuando corresponde, o null si no es evaluable.
+        status:
+          type: string
+          enum:
+            - unfavorable
+            - neutral
+            - favorable
+            - not_evaluable
+          description: Estado estable legible por máquina.
+        label:
+          type: string
+          description: Interpretación en español legible por personas.
+    Violation:
+      type: object
+      additionalProperties: false
+      description: Infracción de validación asociada con un campo.
+      required:
+        - field
+        - rule
+        - message
+      properties:
+        field:
+          type: string
+          description: >-
+            Los campos conocidos usan el nombre lowerCamelCase canónico; una
+            propiedad desconocida conserva el nombre recibido.
+        rule:
+          type: string
+          enum:
+            - required
+            - positive
+            - non_negative
+            - range_0_100
+            - read_only
+            - unknown
+          description: Regla estable y cerrada legible por máquina.
+        message:
+          type: string
+          description: Texto en español que explica cómo corregir la infracción.
+    Error:
+      type: object
+      additionalProperties: false
+      description: Envolvente única para los errores 400, 404 y 422.
+      required:
+        - code
+        - message
+        - violations
+      properties:
+        code:
+          type: string
+          enum:
+            - malformed_request
+            - not_found
+            - validation_failed
+          description: Código estable legible por máquina.
+        message:
+          type: string
+          description: Mensaje de error en español para personas.
+        violations:
+          type: array
+          description: >-
+            Infracciones acumuladas; permanece vacío para malformed_request y
+            not_found.
+          items:
+            $ref: "#/components/schemas/Violation"
+  responses:
+    MalformedRequest:
+      description: La petición JSON no pudo interpretarse.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          examples:
+            malformedRequest:
+              $ref: "#/components/examples/MalformedRequest"
+    NotFound:
+      description: El proyecto o la actividad no existe.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          examples:
+            notFound:
+              $ref: "#/components/examples/NotFound"
+    ProjectValidationFailed:
+      description: La escritura del proyecto incumple reglas de validación.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          examples:
+            validationV1:
+              $ref: "#/components/examples/ValidationV1"
+            validationV2:
+              $ref: "#/components/examples/ValidationV2"
+            validationV10:
+              $ref: "#/components/examples/ValidationV10"
+    ActivityValidationFailed:
+      description: La escritura de la actividad incumple reglas de validación.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          examples:
+            validationV3:
+              $ref: "#/components/examples/ValidationV3"
+            validationV4:
+              $ref: "#/components/examples/ValidationV4"
+            validationV5:
+              $ref: "#/components/examples/ValidationV5"
+            validationV6:
+              $ref: "#/components/examples/ValidationV6"
+            validationV7:
+              $ref: "#/components/examples/ValidationV7"
+            validationV8:
+              $ref: "#/components/examples/ValidationV8"
+            validationV9:
+              $ref: "#/components/examples/ValidationV9"
+            validationV11:
+              $ref: "#/components/examples/ValidationV11"
+            validationV12:
+              $ref: "#/components/examples/ValidationV12"
+            validationV13:
+              $ref: "#/components/examples/ValidationV13"
+  examples:
+    ReferenceProjectAnalysis:
+      summary: Foto analítica literal del proyecto de referencia.
+      value:
+        project:
+          id: 1
+          name: Proyecto de referencia
+          cutoffDate: "2026-06-30"
+        activities:
+          - id: 1
+            name: Actividad con avance y costo, favorable
+            bac: 10000.0
+            plannedProgress: 40.0
+            actualProgress: 50.0
+            ac: 4000.0
+            pv: 4000.0
+            ev: 5000.0
+            cv: 1000.0
+            sv: 1000.0
+            cpi:
+              value: 1.25
+              display: 1,25
+              status: favorable
+              label: eficiente en costos
+            spi:
+              value: 1.25
+              display: 1,25
+              status: favorable
+              label: adelantado
+            eac: 8000.0
+            vac: 2000.0
+          - id: 2
+            name: Actividad con avance y costo, desfavorable
+            bac: 20000.0
+            plannedProgress: 60.0
+            actualProgress: 40.0
+            ac: 10500.0
+            pv: 12000.0
+            ev: 8000.0
+            cv: -2500.0
+            sv: -4000.0
+            cpi:
+              value: 0.7619047619047619
+              display: 0,76
+              status: unfavorable
+              label: sobre presupuesto
+            spi:
+              value: 0.6666666666666666
+              display: 0,67
+              status: unfavorable
+              label: atrasado
+            eac: 26250.0
+            vac: -6250.0
+          - id: 3
+            name: Actividad con costo y sin avance
+            bac: 5000.0
+            plannedProgress: 20.0
+            actualProgress: 0.0
+            ac: 1500.0
+            pv: 1000.0
+            ev: 0.0
+            cv: -1500.0
+            sv: -1000.0
+            cpi:
+              value: 0.0
+              display: 0,00
+              status: unfavorable
+              label: sobre presupuesto
+            spi:
+              value: 0.0
+              display: 0,00
+              status: unfavorable
+              label: atrasado
+            eac: null
+            vac: null
+          - id: 4
+            name: Actividad con avance y AC cero
+            bac: 8000.0
+            plannedProgress: 25.0
+            actualProgress: 30.0
+            ac: 0.0
+            pv: 2000.0
+            ev: 2400.0
+            cv: 2400.0
+            sv: 400.0
+            cpi:
+              value: null
+              display: null
+              status: not_evaluable
+              label: no evaluable
+            spi:
+              value: 1.2
+              display: 1,20
+              status: favorable
+              label: adelantado
+            eac: null
+            vac: null
+          - id: 5
+            name: Actividad sin iniciar
+            bac: 3000.0
+            plannedProgress: 0.0
+            actualProgress: 0.0
+            ac: 0.0
+            pv: 0.0
+            ev: 0.0
+            cv: 0.0
+            sv: 0.0
+            cpi:
+              value: null
+              display: null
+              status: not_evaluable
+              label: no evaluable
+            spi:
+              value: null
+              display: null
+              status: not_evaluable
+              label: no evaluable
+            eac: null
+            vac: null
+          - id: 6
+            name: Actividad sin avance con plan vigente
+            bac: 6000.0
+            plannedProgress: 50.0
+            actualProgress: 0.0
+            ac: 0.0
+            pv: 3000.0
+            ev: 0.0
+            cv: 0.0
+            sv: -3000.0
+            cpi:
+              value: null
+              display: null
+              status: not_evaluable
+              label: no evaluable
+            spi:
+              value: 0.0
+              display: 0,00
+              status: unfavorable
+              label: atrasado
+            eac: null
+            vac: null
+          - id: 7
+            name: Actividad con avance y costo, sin plan a la fecha
+            bac: 4000.0
+            plannedProgress: 0.0
+            actualProgress: 25.0
+            ac: 1600.0
+            pv: 0.0
+            ev: 1000.0
+            cv: -600.0
+            sv: 1000.0
+            cpi:
+              value: 0.625
+              display: 0,63
+              status: unfavorable
+              label: sobre presupuesto
+            spi:
+              value: null
+              display: null
+              status: not_evaluable
+              label: no evaluable
+            eac: 6400.0
+            vac: -2400.0
+          - id: 8
+            name: Actividad con avance y costo, conforme al plan
+            bac: 12000.0
+            plannedProgress: 50.0
+            actualProgress: 50.0
+            ac: 6030.0
+            pv: 6000.0
+            ev: 6000.0
+            cv: -30.0
+            sv: 0.0
+            cpi:
+              value: 0.9950248756218906
+              display: 1,00
+              status: neutral
+              label: en presupuesto
+            spi:
+              value: 1.0
+              display: 1,00
+              status: neutral
+              label: en cronograma
+            eac: 12060.0
+            vac: -60.0
+        summary:
+          bac: 68000.0
+          pv: 28000.0
+          ev: 22400.0
+          ac: 23630.0
+          cv: -1230.0
+          sv: -5600.0
+          cpi:
+            value: 0.9479475243334744
+            display: 0,95
+            status: unfavorable
+            label: sobre presupuesto
+          spi:
+            value: 0.8
+            display: 0,80
+            status: unfavorable
+            label: atrasado
+          eac: 71733.92857142857
+          vac: -3733.9285714285716
+          progress: 32.94117647058823
+          activitiesWithEvAndZeroAc: 1
+    ReferenceProject:
+      summary: Proyecto literal de la foto de referencia.
+      value:
+        id: 1
+        name: Proyecto de referencia
+        cutoffDate: "2026-06-30"
+    ReferenceActivity:
+      summary: Primera actividad literal de la foto de referencia.
+      value:
+        id: 1
+        name: Actividad con avance y costo, favorable
+        bac: 10000.0
+        plannedProgress: 40.0
+        actualProgress: 50.0
+        ac: 4000.0
+        pv: 4000.0
+        ev: 5000.0
+        cv: 1000.0
+        sv: 1000.0
+        cpi:
+          value: 1.25
+          display: 1,25
+          status: favorable
+          label: eficiente en costos
+        spi:
+          value: 1.25
+          display: 1,25
+          status: favorable
+          label: adelantado
+        eac: 8000.0
+        vac: 2000.0
+    ProjectCollection:
+      summary: Colección literal de proyectos para el selector.
+      value:
+        - id: 1
+          name: Proyecto de referencia
+        - id: 2
+          name: Proyecto sin actividades
+    EmptyProjectCollection:
+      summary: Colección literal sin proyectos.
+      value: []
+    MalformedRequest:
+      summary: Error literal de petición no interpretable.
+      value:
+        code: malformed_request
+        message: La petición no pudo interpretarse.
+        violations: []
+    NotFound:
+      summary: Error literal de recurso inexistente.
+      value:
+        code: not_found
+        message: El recurso no existe.
+        violations: []
+    ValidationV1:
+      summary: Error literal V1 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: name
+            rule: required
+            message: Es obligatorio.
+    ValidationV2:
+      summary: Error literal V2 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: cutoffDate
+            rule: required
+            message: Es obligatorio.
+    ValidationV3:
+      summary: Error literal V3 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: name
+            rule: required
+            message: Es obligatorio.
+    ValidationV4:
+      summary: Error literal V4 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: bac
+            rule: positive
+            message: Debe ser positivo.
+    ValidationV5:
+      summary: Error literal V5 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: ac
+            rule: non_negative
+            message: No puede ser negativo.
+    ValidationV6:
+      summary: Error literal V6 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: plannedProgress
+            rule: range_0_100
+            message: Debe estar entre 0 y 100.
+    ValidationV7:
+      summary: Error literal V7 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: actualProgress
+            rule: range_0_100
+            message: Debe estar entre 0 y 100.
+    ValidationV8:
+      summary: Error literal V8 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: cpi
+            rule: read_only
+            message: >-
+              Es un campo de solo lectura y no se admite en una escritura.
+    ValidationV9:
+      summary: Error literal V9 con infracciones acumuladas.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: name
+            rule: required
+            message: Es obligatorio.
+          - field: bac
+            rule: positive
+            message: Debe ser positivo.
+          - field: plannedProgress
+            rule: range_0_100
+            message: Debe estar entre 0 y 100.
+          - field: actualProgress
+            rule: range_0_100
+            message: Debe estar entre 0 y 100.
+          - field: ac
+            rule: non_negative
+            message: No puede ser negativo.
+          - field: cpi
+            rule: read_only
+            message: >-
+              Es un campo de solo lectura y no se admite en una escritura.
+          - field: owner
+            rule: unknown
+            message: No pertenece al esquema de escritura.
+    ValidationV10:
+      summary: Error literal V10 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: cutoffDate
+            rule: required
+            message: Es obligatorio.
+    ValidationV11:
+      summary: Error literal V11 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: bac
+            rule: required
+            message: Es obligatorio.
+    ValidationV12:
+      summary: Error literal V12 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: owner
+            rule: unknown
+            message: No pertenece al esquema de escritura.
+    ValidationV13:
+      summary: Error literal V13 de validación.
+      value:
+        code: validation_failed
+        message: La entrada contiene errores.
+        violations:
+          - field: name
+            rule: required
+            message: Es obligatorio.

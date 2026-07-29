@@ -1,0 +1,66 @@
+import assert from "node:assert/strict";
+import { after, before, test } from "node:test";
+
+import { Decimal } from "@/domain/decimal";
+import { createDatabase } from "@/infrastructure/database/client";
+import { DrizzleEvmRepository } from "@/infrastructure/database/drizzle-evm-repository";
+
+import { createIntegrationDatabaseLock } from "./database-lock";
+
+const originalBac = new Decimal("987654321012345678.123456789012345678");
+const plannedProgress = new Decimal("0.123456789012345678");
+const actualProgress = new Decimal("0.876543210987654321");
+const ac = new Decimal("123456789012345678.987654321098765432");
+const databaseUrl =
+  process.env.DATABASE_URL ?? "postgres://evm:evm@127.0.0.1:5432/evm";
+const { db, pool } = createDatabase(databaseUrl);
+const repository = new DrizzleEvmRepository(db);
+let projectId: number | null = null;
+const databaseLock = createIntegrationDatabaseLock(pool);
+
+before(async () => {
+  await databaseLock.acquire();
+});
+
+after(async () => {
+  try {
+    if (projectId !== null) {
+      await pool.query("delete from projects where id = $1", [projectId]);
+    }
+  } finally {
+    try {
+      await databaseLock.release();
+    } finally {
+      await pool.end();
+    }
+  }
+});
+
+test("preserves an 18-place numeric and reconstructs Decimal without rounding", async () => {
+  const project = await repository.createProject({
+    name: "Prueba de ida y vuelta decimal",
+    cutoffDate: "2026-07-28",
+  });
+  projectId = project.id;
+  const activity = await repository.createActivity({
+    projectId: project.id,
+    name: "Actividad de precisión",
+    bac: originalBac,
+    plannedProgress,
+    actualProgress,
+    ac,
+  });
+
+  const rawResult = await pool.query<{ bac: string }>(
+    "select bac from activities where id = $1",
+    [activity.id],
+  );
+  assert.equal(rawResult.rows[0]?.bac, originalBac.toString());
+
+  const reconstructed = await repository.findActivity(project.id, activity.id);
+  assert.ok(reconstructed);
+  assert.equal(reconstructed.bac.eq(originalBac), true);
+  assert.equal(reconstructed.plannedProgress.eq(plannedProgress), true);
+  assert.equal(reconstructed.actualProgress.eq(actualProgress), true);
+  assert.equal(reconstructed.ac.eq(ac), true);
+});
