@@ -2,8 +2,8 @@
 
 - [x] 1.1 Extend the contract runner so one Next.js process exercises both the retained mock suite and serial real-route tests against migrated PostgreSQL.
 - [ ] 1.2 Add fixture-backed failing tests for the project collection, exact aggregate read, all success statuses and bodies, bodyless deletes, complete replacements, missing resources and absence of invented routes.
-- [ ] 1.3 Add fixture-backed failing tests for malformed JSON, incompatible known types and date formats, all thirteen validation checks, the required-field missing/null matrix, public error shape and violation accumulation without message or order coupling.
-- [ ] 1.4 Add failing state-intact tests that seed `readResponse`, reject structural and business-invalid writes, and prove the subsequent aggregate read is exactly unchanged.
+- [x] 1.3 Add fixture-backed failing tests for malformed JSON, incompatible known types and date formats, all thirteen validation checks, the required-field missing/null matrix, public error shape and violation accumulation without message or order coupling.
+- [x] 1.4 Add failing state-intact tests that seed `readResponse`, reject structural and business-invalid writes, and prove the subsequent aggregate read is exactly unchanged.
 
 ## 2. Shared HTTP translation
 

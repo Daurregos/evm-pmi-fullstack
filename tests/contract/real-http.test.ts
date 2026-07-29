@@ -318,6 +318,207 @@ test("activity create, replacement and deletion respect project scope", async ()
   );
 });
 
+type ValidationCheck = {
+  $id: string;
+  expectedBody: JsonObject;
+  expectedStatus: number;
+  request: JsonObject;
+  resource: "activity" | "project";
+};
+
+function violationKeys(value: JsonValue): string[] {
+  assert.ok(Array.isArray(value));
+
+  return value
+    .map((entry) => {
+      assert.ok(
+        entry !== null && typeof entry === "object" && !Array.isArray(entry),
+      );
+      const violation = entry as JsonObject;
+      assert.deepEqual(Object.keys(violation).sort(), [
+        "field",
+        "message",
+        "rule",
+      ]);
+      assert.equal(typeof violation.field, "string");
+      assert.equal(typeof violation.rule, "string");
+      assert.equal(typeof violation.message, "string");
+      return `${String(violation.field)}:${String(violation.rule)}`;
+    })
+    .sort();
+}
+
+function assertNoInternalDetail(value: JsonValue): void {
+  if (Array.isArray(value)) {
+    value.forEach(assertNoInternalDetail);
+    return;
+  }
+
+  if (value !== null && typeof value === "object") {
+    for (const [key, child] of Object.entries(value)) {
+      assert.doesNotMatch(
+        key,
+        /exception|stack|trace|framework|postgres|drizzle|cause|detail/i,
+      );
+      assertNoInternalDetail(child);
+    }
+  }
+}
+
+function assertErrorEnvelope(
+  response: { body: JsonValue | undefined; status: number },
+  status: number,
+  code: string,
+): JsonObject {
+  assert.equal(response.status, status);
+  const envelope = response.body as JsonObject;
+  assert.deepEqual(Object.keys(envelope).sort(), [
+    "code",
+    "message",
+    "violations",
+  ]);
+  assert.equal(envelope.code, code);
+  assert.equal(typeof envelope.message, "string");
+  assertNoInternalDetail(envelope);
+  return envelope;
+}
+
+async function assertStateIntact(): Promise<void> {
+  const reread = await request("/projects/1");
+  assert.equal(reread.status, 200);
+  assert.deepEqual(reread.body, stripMetadata(fixture.readResponse));
+}
+
+function validationPath(resource: ValidationCheck["resource"]): string {
+  return resource === "project"
+    ? "/projects/1"
+    : "/projects/1/activities/1";
+}
+
+const validationCases = (
+  (fixture.validationChecks as JsonObject).cases as JsonValue[]
+) as unknown as ValidationCheck[];
+
+for (const validationCase of validationCases) {
+  test(`${validationCase.$id} returns its accumulated 422 and keeps state intact`, async () => {
+    const response = await request(
+      validationPath(validationCase.resource),
+      jsonRequest("PUT", validationCase.request),
+    );
+    const envelope = assertErrorEnvelope(
+      response,
+      validationCase.expectedStatus,
+      "validation_failed",
+    );
+
+    assert.deepEqual(
+      violationKeys(envelope.violations),
+      violationKeys(validationCase.expectedBody.violations),
+    );
+
+    if (validationCase.$id === "V9") {
+      const violations = envelope.violations as JsonValue[];
+      assert.equal(violations.length, 7);
+      assert.equal(
+        new Set(
+          violations.map(
+            (violation) => String((violation as JsonObject).rule),
+          ),
+        ).size,
+        6,
+      );
+    }
+
+    await assertStateIntact();
+  });
+}
+
+type WriteResource = {
+  fields: string[];
+  input: () => JsonObject;
+  path: string;
+};
+
+const writeSchemas = fixture.writeSchemas as JsonObject;
+const requiredResources: Record<"activity" | "project", WriteResource> = {
+  project: {
+    fields: ((writeSchemas.project as JsonObject).fields as JsonValue[]).map(
+      String,
+    ),
+    input: projectWrite,
+    path: "/projects/1",
+  },
+  activity: {
+    fields: ((writeSchemas.activity as JsonObject).fields as JsonValue[]).map(
+      String,
+    ),
+    input: activityWrite,
+    path: "/projects/1/activities/1",
+  },
+};
+
+for (const [resourceName, resource] of Object.entries(requiredResources)) {
+  for (const field of resource.fields) {
+    for (const form of ["missing", "null"] as const) {
+      test(`${resourceName} ${field} ${form} returns 422 required`, async () => {
+        const input = resource.input();
+        if (form === "missing") {
+          delete input[field];
+        } else {
+          input[field] = null;
+        }
+
+        const response = await request(
+          resource.path,
+          jsonRequest("PUT", input),
+        );
+        const envelope = assertErrorEnvelope(
+          response,
+          422,
+          "validation_failed",
+        );
+        assert.deepEqual(violationKeys(envelope.violations), [
+          `${field}:required`,
+        ]);
+        await assertStateIntact();
+      });
+    }
+  }
+}
+
+test("the literal incompatible BAC request is 400 and keeps state intact", async () => {
+  const malformed = (fixture.errorEnvelopes as JsonObject)
+    .malformedRequest as JsonObject;
+  const response = await request(
+    "/projects/1/activities/1",
+    jsonRequest("PUT", malformed.$exampleRequest as JsonObject),
+  );
+  const envelope = assertErrorEnvelope(
+    response,
+    malformed.expectedStatus as number,
+    "malformed_request",
+  );
+
+  assert.deepEqual(envelope.violations, []);
+  await assertStateIntact();
+});
+
+test("a successful write trims lateral name spaces and preserves interior spaces", async () => {
+  const response = await request(
+    "/projects/1/activities/1",
+    jsonRequest(
+      "PUT",
+      activityWrite({ name: "  Actividad   con espacios  " }),
+    ),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(
+    (response.body as JsonObject).name,
+    "Actividad   con espacios",
+  );
+});
+
 async function assertMalformed(
   pathname: string,
   body: string,
@@ -328,15 +529,7 @@ async function assertMalformed(
     method: "POST",
   });
 
-  assert.equal(response.status, 400);
-  const envelope = response.body as JsonObject;
-  assert.deepEqual(Object.keys(envelope).sort(), [
-    "code",
-    "message",
-    "violations",
-  ]);
-  assert.equal(envelope.code, "malformed_request");
-  assert.equal(typeof envelope.message, "string");
+  const envelope = assertErrorEnvelope(response, 400, "malformed_request");
   assert.deepEqual(envelope.violations, []);
 }
 
