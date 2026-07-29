@@ -393,6 +393,162 @@ body {
   background: transparent;
 }
 
+/* Botones y acciones */
+
+.shell__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.button {
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:hover {
+  border-color: var(--ink-soft);
+}
+
+.button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.button--primary {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.button--ghost {
+  color: var(--ink-soft);
+}
+
+.button--row {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.dashboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.activities__actions {
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.activities__actions .button {
+  margin-right: 6px;
+}
+
+.notice--stale {
+  border-color: var(--steady);
+  background: var(--steady-soft);
+  color: var(--steady);
+}
+
+/* Captura en diálogo nativo */
+
+.modal {
+  width: min(560px, calc(100vw - 32px));
+  padding: 22px 24px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.modal::backdrop {
+  background: rgb(12 14 16 / 55%);
+}
+
+.modal__title {
+  margin: 0 0 4px;
+  font-size: 19px;
+}
+
+.form__grid {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+
+.field__label {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.field__control {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--page);
+  color: inherit;
+  font: inherit;
+}
+
+.field__control[aria-invalid="true"] {
+  border-color: var(--unfavorable);
+  background: var(--unfavorable-soft);
+}
+
+.field__error {
+  color: var(--unfavorable);
+  font-size: 13px;
+}
+
+.form__feedback {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--unfavorable);
+  border-radius: 8px;
+  background: var(--unfavorable-soft);
+  color: var(--unfavorable);
+}
+
+.form__notice {
+  margin: 0;
+  font-size: 14px;
+}
+
+.form__violations {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 13px;
+}
+
+.form__hint {
+  margin: 14px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.form__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin: 20px 0 0;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --page: #14171a;

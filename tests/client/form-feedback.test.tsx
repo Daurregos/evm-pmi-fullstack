@@ -2,14 +2,45 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { ContractViolation } from "../../src/shared/contract";
-import { ACTIVITY_FORM_FIELDS } from "../../src/ui/activity-form-state";
+import { ActivityForm } from "../../src/ui/activity-form";
+import {
+  ACTIVITY_FORM_FIELDS,
+  activityFormOf,
+} from "../../src/ui/activity-form-state";
 import { EvmApiError } from "../../src/ui/evm-api-client";
 import {
   NO_FEEDBACK,
+  type FormFeedback,
   feedbackOf,
   violationsOf,
 } from "../../src/ui/form-feedback";
-import { errorEnvelope, validationCase } from "./simulated-api";
+import { elementWith, renderMarkup, visibleText } from "./render";
+import {
+  errorEnvelope,
+  referenceActivity,
+  validationCase,
+} from "./simulated-api";
+
+function renderRejectedForm(feedback: FormFeedback): string {
+  return renderMarkup(
+    <ActivityForm
+      feedback={feedback}
+      onCancel={() => undefined}
+      onChange={() => undefined}
+      onSubmit={() => undefined}
+      saving={false}
+      values={activityFormOf(referenceActivity)}
+    />,
+  );
+}
+
+/** Reglas mostradas junto a un campo, en orden de aparición. */
+function rulesShownFor(markup: string, field: string): string[] {
+  const block = elementWith(markup, "data-field", field, "p");
+  const pattern = /data-violation-rule="([^"]*)"/g;
+
+  return [...block.matchAll(pattern)].map(([, rule]) => rule);
+}
 
 function failureOf(scenario: {
   body: { code: string; message: string; violations: readonly ContractViolation[] };
@@ -128,6 +159,58 @@ test("a failure without an envelope is generic and still speaks", () => {
 
   assert.equal(feedback.kind, "generic");
   assert.ok(feedback.notice.length > 0);
+});
+
+/**
+ * RF-02 exige indicar el campo y la regla incumplida. La prueba asevera la regla
+ * y la presencia del mensaje, nunca su redacción: `docs/TESTING.md` prohíbe fijar
+ * el texto y ADR-009 lo declara no automatizable.
+ */
+test("a rejected write shows every violation next to the field it names", () => {
+  const feedback = feedbackOf(failureOf(composite), ACTIVITY_FORM_FIELDS);
+  const markup = renderRejectedForm(feedback);
+
+  for (const field of ACTIVITY_FORM_FIELDS) {
+    const expected = violationsOf(feedback, field).map(
+      (violation) => violation.rule,
+    );
+
+    assert.deepEqual(rulesShownFor(markup, field), expected);
+
+    const block = elementWith(markup, "data-field", field, "p");
+    assert.equal(block.includes('aria-invalid="true"'), expected.length > 0);
+
+    for (const violation of violationsOf(feedback, field)) {
+      assert.ok(visibleText(block).includes(violation.message));
+    }
+  }
+});
+
+test("a violation outside the form is shown without a field to mark", () => {
+  const feedback = feedbackOf(failureOf(composite), ACTIVITY_FORM_FIELDS);
+  const markup = renderRejectedForm(feedback);
+  const list = elementWith(markup, "data-form-violations", "true", "ul");
+
+  for (const violation of feedback.unassigned) {
+    assert.ok(list.includes(`data-violation-field="${violation.field}"`));
+    assert.ok(list.includes(`data-violation-rule="${violation.rule}"`));
+    assert.ok(visibleText(list).includes(violation.message));
+  }
+});
+
+test("a generic failure marks no field and still reports", () => {
+  const feedback = feedbackOf(
+    failureOf(errorEnvelope("malformedRequest")),
+    ACTIVITY_FORM_FIELDS,
+  );
+  const markup = renderRejectedForm(feedback);
+
+  for (const field of ACTIVITY_FORM_FIELDS) {
+    assert.deepEqual(rulesShownFor(markup, field), []);
+  }
+
+  assert.equal(markup.includes('aria-invalid="true"'), false);
+  assert.ok(visibleText(markup).includes(feedback.notice));
 });
 
 test("an untouched form has nothing to report", () => {

@@ -5,6 +5,7 @@ import {
   fetchProjectAnalysis,
   fetchProjectList,
 } from "@/ui/evm-api-client";
+import type { DashboardPatch } from "@/ui/mutation-flow";
 
 export interface DashboardSnapshot {
   readonly projects: readonly ProjectListItem[];
@@ -38,5 +39,24 @@ export async function loadDashboard(
     ),
     projects,
     selectedProjectId: first.id,
+  };
+}
+
+/**
+ * Aplica el refresco de una mutación sobre la foto vigente. Es un reemplazo
+ * único: ADR-007 exige que tabla, consolidado y gráfica cambien juntos, así que
+ * no existe un estado intermedio donde una parte esté nueva y otra vieja.
+ */
+export function withPatch(
+  snapshot: DashboardSnapshot,
+  patch: DashboardPatch,
+): DashboardSnapshot {
+  return {
+    analysis: patch.analysis === undefined ? snapshot.analysis : patch.analysis,
+    projects: patch.projects ?? snapshot.projects,
+    selectedProjectId:
+      patch.selectedProjectId === undefined
+        ? snapshot.selectedProjectId
+        : patch.selectedProjectId,
   };
 }

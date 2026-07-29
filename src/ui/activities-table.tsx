@@ -9,11 +9,15 @@ import { IndexBadge } from "@/ui/index-badge";
 
 export interface ActivitiesTableProps {
   readonly activities: readonly ActivityRead[];
+  readonly onEditActivity?: (activity: ActivityRead) => void;
+  readonly onDeleteActivity?: (activity: ActivityRead) => void;
 }
 
 /**
  * RF-06: cada fila muestra los cinco datos capturados y los ocho indicadores
- * derivados. La rebanada es de solo lectura: no hay controles de edición.
+ * derivados. RF-02 añade editar y eliminar por fila, que aparecen solo cuando el
+ * consumidor entrega los manejadores. La captura vive en el formulario: aquí no
+ * hay ningún control de entrada.
  *
  * El nombre encabeza la fila, porque es lo que identifica a la actividad para
  * quien lee; el identificador queda en `data-row-id`, disponible para el
@@ -22,7 +26,13 @@ export interface ActivitiesTableProps {
  * Trece columnas no caben en una pantalla estrecha, así que la tabla desplaza
  * dentro de su propio contenedor en lugar de desplazar la página.
  */
-export function ActivitiesTable({ activities }: ActivitiesTableProps) {
+export function ActivitiesTable({
+  activities,
+  onDeleteActivity,
+  onEditActivity,
+}: ActivitiesTableProps) {
+  const editable = onEditActivity !== undefined || onDeleteActivity !== undefined;
+
   return (
     <div className="activities__scroll">
       <table className="activities">
@@ -46,6 +56,7 @@ export function ActivitiesTable({ activities }: ActivitiesTableProps) {
             <th scope="col">SPI</th>
             <th scope="col">EAC</th>
             <th scope="col">VAC</th>
+            {editable ? <th scope="col">Acciones</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -90,6 +101,34 @@ export function ActivitiesTable({ activities }: ActivitiesTableProps) {
               <td className="activities__amount" data-field="vac">
                 {formatOptionalAmount(activity.vac)}
               </td>
+              {editable ? (
+                <td className="activities__actions" data-row-actions={activity.id}>
+                  {onEditActivity === undefined ? null : (
+                    <button
+                      className="button button--row"
+                      data-row-action="edit"
+                      onClick={() => {
+                        onEditActivity(activity);
+                      }}
+                      type="button"
+                    >
+                      Editar
+                    </button>
+                  )}
+                  {onDeleteActivity === undefined ? null : (
+                    <button
+                      className="button button--row"
+                      data-row-action="delete"
+                      onClick={() => {
+                        onDeleteActivity(activity);
+                      }}
+                      type="button"
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>

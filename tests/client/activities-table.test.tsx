@@ -208,8 +208,45 @@ test("a positive CV with a non-evaluable CPI is never shown as favorable", () =>
   assert.ok(row.cells.spi.includes("index--favorable"));
 });
 
-test("the read-only table offers no editing affordance", () => {
+test("without handlers the table offers no action", () => {
   for (const tag of ["<input", "<button", "<form", "<textarea", "<select"]) {
     assert.ok(!markup.includes(tag), `Unexpected ${tag} in the table`);
+  }
+
+  assert.equal(markup.includes("data-row-actions"), false);
+});
+
+/**
+ * RF-02: editar y eliminar empiezan donde están las actividades. La captura
+ * sigue fuera de la tabla: dentro no hay ningún control de entrada.
+ */
+test("with handlers every row offers editing and deletion but no capture", () => {
+  const editable = renderMarkup(
+    <ActivitiesTable
+      activities={activities}
+      onDeleteActivity={() => undefined}
+      onEditActivity={() => undefined}
+    />,
+  );
+
+  assert.deepEqual(
+    attributeValues(editable, "data-row-actions"),
+    activities.map((activity) => String(activity.id)),
+  );
+
+  const actionPattern = /<button[^>]*data-row-action="([^"]*)"/g;
+  const actions = [...editable.matchAll(actionPattern)].map(([, name]) => name);
+
+  assert.deepEqual(
+    actions,
+    activities.flatMap(() => ["edit", "delete"]),
+  );
+
+  for (const tag of ["<input", "<form", "<textarea", "<select"]) {
+    assert.ok(!editable.includes(tag), `Unexpected ${tag} in the table`);
+  }
+
+  for (const row of tableRows(editable)) {
+    assert.deepEqual(row.fields, [...CAPTURED_FIELDS, ...DERIVED_FIELDS]);
   }
 });
