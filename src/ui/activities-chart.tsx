@@ -31,9 +31,12 @@ export function ActivitiesChart({ activities }: ActivitiesChartProps) {
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey="pv" fill="#5b7fa6" name="PV" />
-        <Bar dataKey="ev" fill="#3f8f5f" name="EV" />
-        <Bar dataKey="ac" fill="#b0603f" name="AC" />
+        {/* Sin animación: las barras deben estar pintadas en el primer
+            fotograma, y así el marcado del servidor y el del navegador
+            coinciden. */}
+        <Bar dataKey="pv" fill="#5b7fa6" isAnimationActive={false} name="PV" />
+        <Bar dataKey="ev" fill="#3f8f5f" isAnimationActive={false} name="EV" />
+        <Bar dataKey="ac" fill="#b0603f" isAnimationActive={false} name="AC" />
       </BarChart>
       <p className="chart__hint">
         El número del eje corresponde a la primera columna de la tabla.
