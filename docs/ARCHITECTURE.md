@@ -24,11 +24,36 @@ flowchart LR
   un único mapper e implementa el puerto. Solo persiste datos fuente.
 - `src/ui` no importa capas de servidor, no calcula EVM y presenta los datos
   recibidos, incluidos `display`, `status` y `label`.
+- La presentación se reparte: el backend resuelve display de CPI y SPI, porque
+  el marcador es lógica de negocio; los montos cruzan sin redondear y los
+  formatea la interfaz, porque redondear a dos decimales es formato.
 
 `phase0/source-boundaries` impide `domain → app|ui|infrastructure`,
 `application → app|ui|infrastructure` y
 `ui → domain|application|infrastructure`; además, dominio y aplicación no
 pueden depender de Next, Drizzle ni `pg`.
+
+## Por qué la frontera está aquí
+
+Los indicadores EVM se calculan una sola vez, en `src/domain`, y viajan
+resueltos: `value`, `display`, `status` y `label`. La interfaz los presenta;
+no los deriva.
+
+La alternativa natural en un proyecto Next.js sería calcular en el cliente
+para que el dashboard reaccione sin esperar al servidor. Se descartó porque
+duplicaría las reglas en dos lenguajes de ejecución: la banda neutral
+0,99–1,01, los marcadores `<0,99` y `>1,01`, el redondeo con empates
+alejándose de cero y la distinción entre un CPI de cero definido y uno no
+evaluable. Dos implementaciones de esas reglas divergen; la única forma barata
+de garantizar que no ocurra es que exista una sola.
+
+El precio es que la interfaz no obtiene resultados durante la digitación:
+espera a confirmar la edición y a la respuesta del backend. Es coherente con
+RF-03, que exige exactamente ese comportamiento.
+
+Como aquí front y back comparten repositorio y lenguaje, la separación no la
+impone la ejecución en procesos distintos: la impone `phase0/source-boundaries`,
+que hace fallar la construcción si `src/ui` importa `src/domain`.
 
 ## Lectura y cálculo
 
