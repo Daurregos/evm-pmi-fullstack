@@ -19,8 +19,8 @@
 
 ## 4. Architecture documentation
 
-- [ ] 4.1 Replace only the pending A2 request journey and mock substitution marker in `docs/ARCHITECTURE.md` with the implemented route-to-domain-to-response flow, retaining the mock as the client double.
-- [ ] 4.2 Verify the architecture document still covers all ten ADRs and no closed source or excluded product directory changed.
+- [x] 4.1 Replace only the pending A2 request journey and mock substitution marker in `docs/ARCHITECTURE.md` with the implemented route-to-domain-to-response flow, retaining the mock as the client double.
+- [x] 4.2 Verify the architecture document still covers all ten ADRs and no closed source or excluded product directory changed.
 
 ## 5. Completion evidence
 
