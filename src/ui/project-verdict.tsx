@@ -1,6 +1,6 @@
 import type { IndexResult, ProjectSummary } from "@/shared/contract";
 
-import { formatIndexDisplay, formatPercentage } from "@/ui/format";
+import { formatIndexDisplay, formatProgress } from "@/ui/format";
 import { indexGlyph, indexTone } from "@/ui/index-status";
 
 export interface ProjectVerdictProps {
@@ -52,7 +52,7 @@ export function ProjectVerdict({ summary }: ProjectVerdictProps) {
         <h3 className="verdict__title">Avance del proyecto</h3>
         <p className="verdict__reading">
           <span className="verdict__value">
-            {formatPercentage(summary.progress)}
+            {formatProgress(summary.progress)}
           </span>
         </p>
         <p className="verdict__label">valor ganado sobre presupuesto total</p>

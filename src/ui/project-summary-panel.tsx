@@ -3,7 +3,7 @@ import type { ProjectSummary } from "@/shared/contract";
 import {
   formatAmount,
   formatOptionalAmount,
-  formatPercentage,
+  formatProgress,
 } from "@/ui/format";
 import { IndexBadge } from "@/ui/index-badge";
 
@@ -67,7 +67,7 @@ export function ProjectSummaryPanel({ summary }: ProjectSummaryPanelProps) {
         </div>
         <div className="summary__entry">
           <dt>Avance</dt>
-          <dd data-field="progress">{formatPercentage(summary.progress)}</dd>
+          <dd data-field="progress">{formatProgress(summary.progress)}</dd>
         </div>
         <div className="summary__entry summary__entry--note">
           <dt>Actividades con EV y AC cero</dt>

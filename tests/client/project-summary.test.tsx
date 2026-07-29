@@ -6,7 +6,7 @@ import { ProjectVerdict } from "../../src/ui/project-verdict";
 import {
   formatAmount,
   formatOptionalAmount,
-  formatPercentage,
+  formatProgress,
 } from "../../src/ui/format";
 import { indexTone } from "../../src/ui/index-status";
 import {
@@ -42,7 +42,7 @@ test("the panel shows the project progress as a whole percent", () => {
 
   assert.equal(
     visibleText(fields.progress),
-    formatPercentage(summary.progress),
+    formatProgress(summary.progress),
   );
   assert.equal(visibleText(fields.progress), "33 %");
 });

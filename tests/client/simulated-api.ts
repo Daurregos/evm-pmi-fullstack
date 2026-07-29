@@ -7,6 +7,14 @@ import type {
   ProjectListItem,
 } from "../../src/shared/contract";
 
+/** Los cuatro capturados numéricos que el fixture escribe en un `$input`. */
+export type ActivityCapture = Readonly<{
+  bac: number;
+  plannedProgress: number;
+  actualProgress: number;
+  ac: number;
+}>;
+
 type JsonObject = { [key: string]: JsonValue };
 type JsonValue = JsonObject | JsonValue[] | boolean | number | string | null;
 
@@ -61,6 +69,17 @@ export function errorEnvelope(scenario: string): {
   };
 }
 
+function bandCase(caseId: string): JsonObject {
+  const cases = fixtureSection("neutralBandChecks").cases as JsonObject[];
+  const found = cases.find((candidate) => candidate.$id === caseId);
+
+  if (found === undefined) {
+    throw new Error(`Unknown neutral band case: ${caseId}`);
+  }
+
+  return found;
+}
+
 /**
  * Índices esperados de un caso de `neutralBandChecks`, donde el marcador es lo
  * único que distingue dos valores que redondean igual.
@@ -69,19 +88,20 @@ export function bandCaseIndexes(caseId: string): {
   cpi: IndexResult;
   spi: IndexResult;
 } {
-  const cases = fixtureSection("neutralBandChecks").cases as JsonObject[];
-  const found = cases.find((candidate) => candidate.$id === caseId);
-
-  if (found === undefined) {
-    throw new Error(`Unknown neutral band case: ${caseId}`);
-  }
-
-  const expected = found.$expected as JsonObject;
+  const expected = bandCase(caseId).$expected as JsonObject;
 
   return {
     cpi: expected.cpi as unknown as IndexResult,
     spi: expected.spi as unknown as IndexResult,
   };
+}
+
+/**
+ * Datos capturados de un caso de `neutralBandChecks`. El fixture los escribe
+ * con decimales, así que sirven de oráculo de lo que el usuario digitó.
+ */
+export function bandCaseInput(caseId: string): ActivityCapture {
+  return bandCase(caseId).$input as unknown as ActivityCapture;
 }
 
 export interface SimulatedApiOptions {

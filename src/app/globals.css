@@ -319,7 +319,6 @@ body {
   color: var(--ink-soft);
 }
 
-.activities th.activities__id,
 .activities td.activities__name,
 .activities th.activities__name,
 .activities td.activities__index {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ActivitiesChart } from "../../src/ui/activities-chart";
+import { ActivitiesChart, axisLabel } from "../../src/ui/activities-chart";
 import { occurrences, renderMarkup, visibleText } from "./render";
 import { emptyAnalysis, referenceAnalysis } from "./simulated-api";
 
@@ -24,15 +24,32 @@ test("the chart presents three values per activity", () => {
   assert.equal(activities.length, 8);
 });
 
-test("each activity is identified on the category axis", () => {
+test("each activity is identified on the axis by its name", () => {
   const axis = visibleText(markup);
 
   for (const activity of activities) {
     assert.ok(
-      axis.includes(String(activity.id)),
-      `Expected activity ${String(activity.id)} on the axis`,
+      axis.includes(axisLabel(activity.name)),
+      `Expected the name of activity ${String(activity.id)} on the axis`,
     );
   }
+});
+
+test("a truncated label still tells the activities apart", () => {
+  const labels = activities.map((activity) => axisLabel(activity.name));
+
+  assert.equal(new Set(labels).size, activities.length);
+});
+
+test("a short name reaches the axis whole and a long one is truncated", () => {
+  assert.equal(axisLabel("Cimentación"), "Cimentación");
+
+  const long = "Actividad".repeat(10);
+  const truncated = axisLabel(long);
+
+  assert.ok(truncated.length < long.length);
+  assert.ok(truncated.endsWith("…"));
+  assert.ok(long.startsWith(truncated.slice(0, -1)));
 });
 
 test("a project without activities renders no bars and does not fail", () => {
