@@ -243,6 +243,30 @@ test("Decimal configuration, quantization, and presentation calls are rejected b
   );
 });
 
+test("extracted and bound Decimal policy methods are rejected by type", async () => {
+  const rules = await rulesFor(
+    [
+      'import { Decimal } from "@/domain/decimal";',
+      "declare const value: Decimal;",
+      "const { set } = Decimal;",
+      "set({ precision: 20 });",
+      "const format = value.toFixed;",
+      "format(2);",
+      "const bound = value.toFixed.bind(value);",
+      "bound(2);",
+      "let configure: typeof Decimal.set;",
+      "({ set: configure } = Decimal);",
+      "configure({ precision: 20 });",
+    ].join("\n"),
+    "src/infrastructure/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/decimal-policy").length,
+    4,
+  );
+});
+
 test("decimal.js imports are rejected outside the authorized module", async () => {
   for (const filePath of [
     "src/domain/invalid.ts",
@@ -259,7 +283,14 @@ test("the decimal module may own only its authorized decimal operations", async 
     [
       'import Decimal from "decimal.js";',
       "Decimal.set({ precision: 40 })",
-      "new Decimal(1).toDecimalPlaces(2)",
+      "const value = new Decimal(1);",
+      "value.toDecimalPlaces(2)",
+      "const configuredSet = Decimal.set.bind(Decimal);",
+      "configuredSet({ precision: 40 });",
+      "const quantize = value.toDecimalPlaces.bind(value);",
+      "quantize(2);",
+      'import("decimal.js/decimal.mjs");',
+      'require("decimal.js/decimal.mjs");',
     ].join("\n"),
     "src/domain/decimal.ts",
   );
@@ -364,6 +395,76 @@ test("dynamic decimal.js imports are rejected outside decimal.ts", async () => {
   );
 });
 
+test("dynamic decimal.js subpath imports are rejected outside decimal.ts", async () => {
+  await assertRestrictedBy(
+    "phase0/source-boundaries",
+    'import("decimal.js/decimal.mjs");',
+    "src/infrastructure/invalid.ts",
+  );
+});
+
+test("decimal.js subpaths may not be required outside decimal.ts", async () => {
+  await assertRestrictedBy(
+    "phase0/source-boundaries",
+    'require("decimal.js/decimal.mjs");',
+    "src/infrastructure/invalid.ts",
+  );
+});
+
+const computedBoundaryCases = [
+  {
+    name: "domain rejects concatenated dynamic imports",
+    code: 'import("@/app/" + name);',
+    filePath: "src/domain/invalid.ts",
+  },
+  {
+    name: "domain rejects interpolated dynamic imports",
+    code: "import(`@/app/${name}`);",
+    filePath: "src/domain/invalid.ts",
+  },
+  {
+    name: "domain rejects concatenated require sources",
+    code: 'require("@/infrastructure/" + name);',
+    filePath: "src/domain/invalid.ts",
+  },
+  {
+    name: "domain inspects require sources with extra arguments",
+    code: 'require("@/infrastructure/x", undefined);',
+    filePath: "src/domain/invalid.ts",
+  },
+  {
+    name: "domain rejects unresolved dynamic imports",
+    code: "import(name);",
+    filePath: "src/domain/invalid.ts",
+  },
+  {
+    name: "ui rejects unresolved dynamic imports",
+    code: "import(name);",
+    filePath: "src/ui/invalid.ts",
+  },
+  {
+    name: "application rejects unresolved require sources",
+    code: "require(name);",
+    filePath: "src/application/invalid.ts",
+  },
+  {
+    name: "infrastructure rejects unresolved dynamic imports",
+    code: "import(name);",
+    filePath: "src/infrastructure/invalid.ts",
+  },
+  {
+    name: "shared rejects unresolved require sources",
+    code: "require(name);",
+    filePath: "src/shared/invalid.ts",
+  },
+];
+
+for (const { name, code, filePath } of computedBoundaryCases) {
+  test(name, async () => {
+    await assertRestrictedBy("phase0/source-boundaries", code, filePath);
+  });
+}
+
 test("normalized imports within the same layer remain allowed", async () => {
   const rules = await rulesFor(
     [
@@ -452,6 +553,22 @@ test("allowed domain require dependencies are not rejected globally", async () =
   assert.equal(rules.length, 0);
 });
 
+test("literal same-layer dynamic sources and shadowed require remain allowed", async () => {
+  const rules = await rulesFor(
+    [
+      'import("@/domain/" + "evm");',
+      'require("@/domain/evm", undefined);',
+      "function load(require: (source: string) => unknown, name: string) {",
+      "  require(name);",
+      '  require("@/infrastructure/database/schema");',
+      "}",
+    ].join("\n"),
+    "src/domain/valid.ts",
+  );
+
+  assert.ok(!rules.includes("phase0/source-boundaries"));
+});
+
 test("similarly named non-Decimal operations and exact Decimal operations remain allowed", async () => {
   const rules = await rulesFor(
     [
@@ -467,6 +584,12 @@ test("similarly named non-Decimal operations and exact Decimal operations remain
       "function update(Decimal: Map<string, string>) {",
       '  Decimal.set("key", "value");',
       "}",
+      "const { set } = new Map<string, string>();",
+      'set.call(new Map<string, string>(), "key", "value");',
+      "const numberFormat = n.toFixed;",
+      "numberFormat.call(n, 2);",
+      "const boundNumberFormat = n.toFixed.bind(n);",
+      "boundNumberFormat(2);",
     ].join("\n"),
     "src/infrastructure/valid.ts",
   );

@@ -84,17 +84,42 @@ const forbiddenTargetLayers = {
   application: new Set(["app", "ui", "infrastructure"]),
 };
 
-function literalString(node) {
-  if (node && typeof node.value === "string") {
+function staticValue(node) {
+  if (
+    node?.type === "Literal" &&
+    ["string", "number", "boolean"].includes(typeof node.value)
+  ) {
     return node.value;
   }
-  if (
-    node?.type === "TemplateLiteral" &&
-    node.expressions.length === 0
-  ) {
-    return node.quasis[0]?.value.cooked;
+
+  if (node?.type === "BinaryExpression" && node.operator === "+") {
+    const left = staticValue(node.left);
+    const right = staticValue(node.right);
+    if (left === undefined || right === undefined) {
+      return undefined;
+    }
+    return left + right;
   }
+
+  if (node?.type === "TemplateLiteral") {
+    let value = node.quasis[0]?.value.cooked ?? "";
+    for (let index = 0; index < node.expressions.length; index += 1) {
+      const expressionValue = staticValue(node.expressions[index]);
+      if (expressionValue === undefined) {
+        return undefined;
+      }
+      value += String(expressionValue);
+      value += node.quasis[index + 1]?.value.cooked ?? "";
+    }
+    return value;
+  }
+
   return undefined;
+}
+
+function literalString(node) {
+  const value = staticValue(node);
+  return typeof value === "string" ? value : undefined;
 }
 
 function normalizedInternalTarget(source, filename) {
@@ -146,12 +171,12 @@ function variableForIdentifier(sourceCode, node) {
   return undefined;
 }
 
-function requireSource(sourceCode, node) {
+function requireSourceNode(sourceCode, node) {
   if (
     node.type !== "CallExpression" ||
     node.callee.type !== "Identifier" ||
     node.callee.name !== "require" ||
-    node.arguments.length !== 1
+    node.arguments.length === 0
   ) {
     return undefined;
   }
@@ -161,7 +186,7 @@ function requireSource(sourceCode, node) {
     return undefined;
   }
 
-  return literalString(node.arguments[0]);
+  return node.arguments[0];
 }
 
 const sourceBoundariesRule = {
@@ -169,9 +194,13 @@ const sourceBoundariesRule = {
     type: "problem",
     schema: [],
     messages: {
+      forbiddenDecimalDependency:
+        "Import Decimal from src/domain/decimal.ts.",
       forbiddenDependency:
         "{{layer}} cannot import the concrete dependency {{source}}.",
       forbiddenLayer: "{{layer}} cannot import from {{targetLayer}}.",
+      unresolvedDynamicSource:
+        "Dynamic module sources must resolve to a static string.",
     },
   },
   create(context) {
@@ -179,13 +208,29 @@ const sourceBoundariesRule = {
     const filename = path.resolve(context.filename);
     const layer = layerForPath(filename);
     const forbiddenLayers = forbiddenTargetLayers[layer];
+    const authorizedDecimalModule = filename === decimalModulePath;
 
-    if (!forbiddenLayers) {
+    if (!layer) {
       return {};
     }
 
-    function checkSource(node, source) {
-      if (!source) {
+    function checkSource(node, source, dynamic = false) {
+      if (source === undefined) {
+        if (dynamic) {
+          context.report({ node, messageId: "unresolvedDynamicSource" });
+        }
+        return;
+      }
+
+      if (
+        !authorizedDecimalModule &&
+        isPackage(source, "decimal.js")
+      ) {
+        context.report({ node, messageId: "forbiddenDecimalDependency" });
+        return;
+      }
+
+      if (!forbiddenLayers) {
         return;
       }
 
@@ -225,6 +270,10 @@ const sourceBoundariesRule = {
       checkSource(node, sourceFromImportNode(node));
     }
 
+    function checkDynamicImport(node) {
+      checkSource(node, sourceFromImportNode(node), true);
+    }
+
     function checkNormalizedImport(node) {
       const source = sourceFromImportNode(node);
       if (
@@ -238,7 +287,10 @@ const sourceBoundariesRule = {
     }
 
     function checkRequire(node) {
-      checkSource(node, requireSource(sourceCode, node));
+      const sourceNode = requireSourceNode(sourceCode, node);
+      if (sourceNode) {
+        checkSource(node, literalString(sourceNode), true);
+      }
     }
 
     return {
@@ -246,7 +298,7 @@ const sourceBoundariesRule = {
       ExportAllDeclaration: checkImport,
       ExportNamedDeclaration: checkImport,
       ImportDeclaration: checkNormalizedImport,
-      ImportExpression: checkImport,
+      ImportExpression: checkDynamicImport,
     };
   },
 };
@@ -334,13 +386,9 @@ const decimalPolicyRule = {
         : property.name ?? property.value;
     }
 
-    function checkCall(node) {
-      if (node.callee.type !== "MemberExpression") {
-        return;
-      }
-
-      const method = propertyName(node.callee);
-      const object = node.callee.object;
+    function checkMember(node) {
+      const method = propertyName(node);
+      const object = node.object;
       const authorizedOperation =
         authorizedModule &&
         (method === "set" || method === "toDecimalPlaces");
@@ -353,8 +401,42 @@ const decimalPolicyRule = {
       }
     }
 
+    function checkObjectPattern(pattern, receiver) {
+      for (const property of pattern.properties) {
+        if (property.type !== "Property") {
+          continue;
+        }
+
+        const method = propertyName(property);
+        const authorizedOperation =
+          authorizedModule &&
+          (method === "set" || method === "toDecimalPlaces");
+        if (
+          !authorizedOperation &&
+          decimalPolicyMethods.has(method) &&
+          receiverIsDecimal(receiver, method)
+        ) {
+          context.report({ node: property, messageId: "restrictedOperation" });
+        }
+      }
+    }
+
+    function checkAssignmentDestructuring(node) {
+      if (node.left.type === "ObjectPattern") {
+        checkObjectPattern(node.left, node.right);
+      }
+    }
+
+    function checkVariableDestructuring(node) {
+      if (node.id.type === "ObjectPattern" && node.init) {
+        checkObjectPattern(node.id, node.init);
+      }
+    }
+
     return {
-      CallExpression: checkCall,
+      AssignmentExpression: checkAssignmentDestructuring,
+      MemberExpression: checkMember,
+      VariableDeclarator: checkVariableDestructuring,
     };
   },
 };
