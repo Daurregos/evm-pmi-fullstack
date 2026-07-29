@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { after, test } from "node:test";
+import { after, before, test } from "node:test";
 
 import { getProjectAnalysis } from "@/application/evm-analysis";
 import { createDatabase } from "@/infrastructure/database/client";
 import { DrizzleEvmRepository } from "@/infrastructure/database/drizzle-evm-repository";
 import { seedFixture } from "@/infrastructure/database/seed";
 import type { ProjectAnalysis } from "@/shared/contract";
+
+import { createIntegrationDatabaseLock } from "./database-lock";
 
 type JsonValue =
   | boolean
@@ -44,9 +46,18 @@ const databaseUrl =
   process.env.DATABASE_URL ?? "postgres://evm:evm@127.0.0.1:5432/evm";
 const { db, pool } = createDatabase(databaseUrl);
 const repository = new DrizzleEvmRepository(db);
+const databaseLock = createIntegrationDatabaseLock(pool);
+
+before(async () => {
+  await databaseLock.acquire();
+});
 
 after(async () => {
-  await pool.end();
+  try {
+    await databaseLock.release();
+  } finally {
+    await pool.end();
+  }
 });
 
 test("materializes reference analysis from persisted captured values", async () => {

@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { after, test } from "node:test";
+import { after, before, test } from "node:test";
 
 import { Decimal } from "@/domain/decimal";
 import { createDatabase } from "@/infrastructure/database/client";
 import { DrizzleEvmRepository } from "@/infrastructure/database/drizzle-evm-repository";
+
+import { createIntegrationDatabaseLock } from "./database-lock";
 
 const originalBac = new Decimal("987654321012345678.123456789012345678");
 const plannedProgress = new Decimal("0.123456789012345678");
@@ -14,6 +16,11 @@ const databaseUrl =
 const { db, pool } = createDatabase(databaseUrl);
 const repository = new DrizzleEvmRepository(db);
 let projectId: number | null = null;
+const databaseLock = createIntegrationDatabaseLock(pool);
+
+before(async () => {
+  await databaseLock.acquire();
+});
 
 after(async () => {
   try {
@@ -21,7 +28,11 @@ after(async () => {
       await pool.query("delete from projects where id = $1", [projectId]);
     }
   } finally {
-    await pool.end();
+    try {
+      await databaseLock.release();
+    } finally {
+      await pool.end();
+    }
   }
 });
 

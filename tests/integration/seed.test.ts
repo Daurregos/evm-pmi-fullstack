@@ -4,16 +4,24 @@ import { after, before, test } from "node:test";
 import { createDatabase } from "@/infrastructure/database/client";
 import { seedFixture } from "@/infrastructure/database/seed";
 
+import { createIntegrationDatabaseLock } from "./database-lock";
+
 const databaseUrl =
   process.env.DATABASE_URL ?? "postgres://evm:evm@127.0.0.1:5432/evm";
 const { db, pool } = createDatabase(databaseUrl);
+const databaseLock = createIntegrationDatabaseLock(pool);
 
 before(async () => {
+  await databaseLock.acquire();
   await pool.query("delete from projects where id in (1, 2)");
 });
 
 after(async () => {
-  await pool.end();
+  try {
+    await databaseLock.release();
+  } finally {
+    await pool.end();
+  }
 });
 
 test("seeds the two fixture projects and eight captured-only activities idempotently", async () => {

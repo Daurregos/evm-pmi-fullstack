@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { after, test } from "node:test";
+import { after, before, test } from "node:test";
 
 import type {
   ActivityRecord,
@@ -8,6 +8,8 @@ import type {
 import { Decimal } from "@/domain/decimal";
 import { createDatabase } from "@/infrastructure/database/client";
 import { DrizzleEvmRepository } from "@/infrastructure/database/drizzle-evm-repository";
+
+import { createIntegrationDatabaseLock } from "./database-lock";
 
 type NewProjectRecord = Omit<ProjectRecord, "id">;
 type NewActivityRecord = Omit<ActivityRecord, "id">;
@@ -38,6 +40,11 @@ const { db, pool } = createDatabase(databaseUrl);
 const repository = new DrizzleEvmRepository(db);
 const expandedRepository = repository as unknown as ExpandedRepository;
 const createdProjectIds: number[] = [];
+const databaseLock = createIntegrationDatabaseLock(pool);
+
+before(async () => {
+  await databaseLock.acquire();
+});
 
 after(async () => {
   try {
@@ -47,7 +54,11 @@ after(async () => {
       ]);
     }
   } finally {
-    await pool.end();
+    try {
+      await databaseLock.release();
+    } finally {
+      await pool.end();
+    }
   }
 });
 

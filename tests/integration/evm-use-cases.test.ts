@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { after, test } from "node:test";
+import { after, before, test } from "node:test";
 import { readFileSync } from "node:fs";
 
 import { EvmUseCases } from "@/application/evm-use-cases";
@@ -7,6 +7,8 @@ import { createDatabase } from "@/infrastructure/database/client";
 import { DrizzleEvmRepository } from "@/infrastructure/database/drizzle-evm-repository";
 import { seedFixture } from "@/infrastructure/database/seed";
 import type { ProjectAnalysis } from "@/shared/contract";
+
+import { createIntegrationDatabaseLock } from "./database-lock";
 
 type JsonValue =
   | boolean
@@ -79,6 +81,11 @@ const { db, pool } = createDatabase(databaseUrl);
 const repository = new DrizzleEvmRepository(db);
 const application = new EvmUseCases(repository);
 const createdProjectIds: number[] = [];
+const databaseLock = createIntegrationDatabaseLock(pool);
+
+before(async () => {
+  await databaseLock.acquire();
+});
 
 after(async () => {
   try {
@@ -88,7 +95,11 @@ after(async () => {
       ]);
     }
   } finally {
-    await pool.end();
+    try {
+      await databaseLock.release();
+    } finally {
+      await pool.end();
+    }
   }
 });
 
