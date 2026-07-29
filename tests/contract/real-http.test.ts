@@ -59,6 +59,26 @@ async function request(
   };
 }
 
+function jsonRequest(method: string, body?: JsonValue): RequestInit {
+  return {
+    body: body === undefined ? undefined : JSON.stringify(body),
+    headers:
+      body === undefined ? undefined : { "content-type": "application/json" },
+    method,
+  };
+}
+
+function projectWrite(
+  overrides: JsonObject = {},
+): JsonObject {
+  const project = (fixture.readResponse as JsonObject).project as JsonObject;
+  return {
+    name: project.name,
+    cutoffDate: project.cutoffDate,
+    ...overrides,
+  };
+}
+
 before(async () => {
   await databaseLock.acquire();
 });
@@ -99,4 +119,149 @@ test("GET /projects/1 returns the exact stripped aggregate", async () => {
 
   assert.equal(response.status, expectedStatus);
   assert.deepEqual(response.body, stripMetadata(fixture.readResponse));
+});
+
+test("POST /projects returns 201 with only ProjectRead", async () => {
+  const input = projectWrite({
+    name: "Proyecto creado por HTTP",
+    cutoffDate: "2026-08-01",
+  });
+  const response = await request("/projects", jsonRequest("POST", input));
+
+  assert.equal(
+    response.status,
+    ((fixture.successResponses as JsonObject).createProject as JsonObject)
+      .expectedStatus,
+  );
+  const body = response.body as JsonObject;
+  assert.deepEqual(Object.keys(body).sort(), ["cutoffDate", "id", "name"]);
+  assert.equal(Number.isInteger(body.id), true);
+  assert.equal(body.name, input.name);
+  assert.equal(body.cutoffDate, input.cutoffDate);
+});
+
+test("PUT /projects/1 returns the exact fixture ProjectRead", async () => {
+  const response = await request(
+    "/projects/1",
+    jsonRequest("PUT", projectWrite()),
+  );
+
+  assert.equal(
+    response.status,
+    ((fixture.successResponses as JsonObject).replaceProject as JsonObject)
+      .expectedStatus,
+  );
+  assert.deepEqual(
+    response.body,
+    (fixture.readResponse as JsonObject).project,
+  );
+});
+
+test("project replacement changes no activity or summary", async () => {
+  const before = (await request("/projects/1")).body as JsonObject;
+  const replacement = projectWrite({
+    name: "Proyecto reetiquetado",
+    cutoffDate: "2026-08-01",
+  });
+
+  const replaced = await request(
+    "/projects/1",
+    jsonRequest("PUT", replacement),
+  );
+  const after = (await request("/projects/1")).body as JsonObject;
+
+  assert.equal(replaced.status, 200);
+  assert.deepEqual(replaced.body, { id: 1, ...replacement });
+  assert.deepEqual(after.activities, before.activities);
+  assert.deepEqual(after.summary, before.summary);
+});
+
+test("DELETE /projects/:id returns a bodyless 204", async () => {
+  const created = await request(
+    "/projects",
+    jsonRequest(
+      "POST",
+      projectWrite({
+        name: "Proyecto para eliminar",
+        cutoffDate: "2026-08-01",
+      }),
+    ),
+  );
+  const createdId = String((created.body as JsonObject).id);
+
+  const deleted = await request(
+    `/projects/${createdId}`,
+    jsonRequest("DELETE"),
+  );
+
+  assert.equal(deleted.status, 204);
+  assert.equal(deleted.raw, "");
+  assert.equal(deleted.body, undefined);
+});
+
+async function assertNotFound(
+  pathname: string,
+  init?: RequestInit,
+): Promise<void> {
+  const response = await request(pathname, init);
+  const envelope = response.body as JsonObject;
+
+  assert.equal(response.status, 404);
+  assert.deepEqual(Object.keys(envelope).sort(), [
+    "code",
+    "message",
+    "violations",
+  ]);
+  assert.equal(envelope.code, "not_found");
+  assert.equal(typeof envelope.message, "string");
+  assert.deepEqual(envelope.violations, []);
+}
+
+test("missing project replacement and deletion return 404", async () => {
+  await assertNotFound(
+    "/projects/999999",
+    jsonRequest("PUT", projectWrite()),
+  );
+  await assertNotFound("/projects/999999", jsonRequest("DELETE"));
+});
+
+async function assertMalformed(
+  pathname: string,
+  body: string,
+): Promise<void> {
+  const response = await request(pathname, {
+    body,
+    headers: { "content-type": "application/json" },
+    method: "POST",
+  });
+
+  assert.equal(response.status, 400);
+  const envelope = response.body as JsonObject;
+  assert.deepEqual(Object.keys(envelope).sort(), [
+    "code",
+    "message",
+    "violations",
+  ]);
+  assert.equal(envelope.code, "malformed_request");
+  assert.equal(typeof envelope.message, "string");
+  assert.deepEqual(envelope.violations, []);
+}
+
+test("structural request failures are 400 without violations", async () => {
+  await assertMalformed("/projects", "{");
+  await assertMalformed("/projects", "[]");
+  await assertMalformed(
+    "/projects",
+    JSON.stringify({ name: "Proyecto", cutoffDate: "2026-02-30" }),
+  );
+  await assertMalformed(
+    "/projects/1/activities",
+    JSON.stringify({
+      name: "Actividad",
+      bac: "diez",
+      plannedProgress: 50,
+      actualProgress: 40,
+      ac: 500,
+    }),
+  );
 });

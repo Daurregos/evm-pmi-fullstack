@@ -7,13 +7,13 @@
 
 ## 2. Shared HTTP translation
 
-- [ ] 2.1 Add lazy infrastructure composition of `EvmUseCases` with the existing database client and `DrizzleEvmRepository`.
-- [ ] 2.2 Implement structural JSON parsing that checks only object shape, known non-null types and `cutoffDate` format while passing null, absence and extra properties to A1.
-- [ ] 2.3 Implement success and `400`/`404`/`422` response translation with only the public envelope fields and bodyless `204` support.
+- [x] 2.1 Add lazy infrastructure composition of `EvmUseCases` with the existing database client and `DrizzleEvmRepository`.
+- [x] 2.2 Implement structural JSON parsing that checks only object shape, known non-null types and `cutoffDate` format while passing null, absence and extra properties to A1.
+- [x] 2.3 Implement success and `400`/`404`/`422` response translation with only the public envelope fields and bodyless `204` support.
 
 ## 3. Real App Router surface
 
-- [ ] 3.1 Implement `GET` and `POST /projects` and `GET`, `PUT` and `DELETE /projects/{projectId}` as thin use-case adapters.
+- [x] 3.1 Implement `GET` and `POST /projects` and `GET`, `PUT` and `DELETE /projects/{projectId}` as thin use-case adapters.
 - [ ] 3.2 Implement `POST /projects/{projectId}/activities` and `PUT` and `DELETE /projects/{projectId}/activities/{activityId}` as thin use-case adapters.
 - [ ] 3.3 Run the focused contract suite until every real and mock HTTP scenario passes, then run typecheck, lint and the structural review to confirm no formulas, invented routes or forbidden dependencies were introduced.
 
