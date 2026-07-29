@@ -99,7 +99,11 @@ El resto de los valores cae exacto en dos decimales, pero eso es una propiedad d
 
 ## Las siete trampas
 
-Cada una corresponde a un error real y frecuente. Las tres primeras tienen su valor incorrecto en `negativeChecks`, para poder afirmar explícitamente que **no** se produce; las cuatro últimas se comprueban directamente sobre el valor esperado de la actividad implicada.
+Cada una corresponde a un error real y frecuente. `negativeChecks` contiene
+cuatro estrategias incorrectas para poder afirmar explícitamente que **no** se
+producen: las tres primeras trampas y la exclusión de a4 descrita en «El sesgo
+optimista». Las cuatro trampas restantes se comprueban directamente sobre el
+valor esperado de la actividad implicada.
 
 **1. Promediar índices.** El promedio de los cinco CPI definidos es **0,73**, frente al **0,95** correcto. Verifica RF-04.
 
