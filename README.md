@@ -87,6 +87,16 @@ Deuda no bloqueante posterior al andamiaje:
   §7.4. Cuando B2 añada edición, el formulario debe recibir el valor sin
   redondear para no perder centésimas al reenviarlo.
 
+Alcance heredado por B2 para las mutaciones del cliente:
+
+- la digitación no dispara peticiones;
+- una mutación rechazada no refresca la foto y una exitosa sí;
+- si el refresco posterior falla, el cliente reintenta la lectura sin repetir
+  la escritura.
+
+Estas comprobaciones materializan en B2 la mitad de cliente de la sección
+`Verificación` de ADR-007; A2 cubre por separado la mitad HTTP/servidor.
+
 - Añadir una prueba de integración del borrado en cascada real; hoy se comprueba
   la declaración `ON DELETE CASCADE` de la migración y del catálogo PostgreSQL.
 - Automatizar las regresiones de interrupción y servidor obsoleto del runner

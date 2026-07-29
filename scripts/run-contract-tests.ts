@@ -4,6 +4,8 @@ import { once } from "node:events";
 
 const baseUrl = "http://127.0.0.1:3100";
 const mockPrefix = "/mock-api";
+const databaseUrl =
+  process.env.DATABASE_URL ?? "postgres://evm:evm@127.0.0.1:5432/evm";
 
 async function waitForServer(
   server: ChildProcess,
@@ -79,6 +81,7 @@ async function main(): Promise<void> {
   const instanceId = randomUUID();
   const childEnvironment = {
     ...process.env,
+    DATABASE_URL: databaseUrl,
     MOCK_INSTANCE_ID: instanceId,
   };
   const server = spawn(
@@ -126,7 +129,15 @@ async function main(): Promise<void> {
 
     const tests = spawn(
       process.execPath,
-      ["--import", "tsx", "--test", "tests/contract/mock-http.test.ts"],
+      [
+        "--import",
+        "tsx",
+        "--test",
+        "--test-concurrency=1",
+        "tests/contract/mock-http.test.ts",
+        "tests/contract/http-surface-structure.test.ts",
+        "tests/contract/real-http.test.ts",
+      ],
       { env: childEnvironment, stdio: "inherit" },
     );
     const [testExitCode] = (await once(tests, "exit")) as [
