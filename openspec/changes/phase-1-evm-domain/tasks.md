@@ -15,10 +15,10 @@
 
 ## 2. Trasladar las garantías decimales
 
-- [ ] 2.1 Añadir pruebas focalizadas para los empates `1.005`, `-1.005` y
+- [x] 2.1 Añadir pruebas focalizadas para los empates `1.005`, `-1.005` y
   `0.625`, además de la ida y vuelta Decimal–número JSON–Decimal cubierta por
   la sonda.
-- [ ] 2.2 Ejecutar las pruebas decimales, confirmar que usan únicamente la
+- [x] 2.2 Ejecutar las pruebas decimales, confirmar que usan únicamente la
   política de `src/domain/decimal.ts` y retirar
   `scripts/verify-decimal.mjs`.
 

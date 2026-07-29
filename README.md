@@ -35,9 +35,6 @@ Deuda no bloqueante posterior al andamiaje:
   usa los identificadores canónicos del fixture.
 - Ejecutar `npm test` sin otro `next dev` activo en el mismo worktree; Next 16
   protege el directorio con un único bloqueo aunque se usen puertos distintos.
-- `scripts/verify-decimal.mjs` es una sonda independiente ya satisfecha. Debe
-  archivarse o eliminarse en el primer slice de fase 1, cuando el dominio cubra
-  el fixture, los empates y el viaje JSON.
 - `npm audit --omit=dev` no reporta vulnerabilidades. Permanecen avisos en
   dependencias transitivas de desarrollo de Drizzle Kit y ESLint cuya
   corrección automática exige cambios incompatibles.

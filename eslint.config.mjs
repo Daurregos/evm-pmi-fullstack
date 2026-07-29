@@ -875,7 +875,6 @@ export default defineConfig([
     ".next/**",
     "node_modules/**",
     "drizzle/meta/**",
-    "scripts/verify-decimal.mjs",
   ]),
   {
     rules: {
