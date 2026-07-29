@@ -9,7 +9,7 @@
 - [x] 1.3 Añadir `npm run lint` y `npm run lint:imports` a CI, ejecutar lint,
   imports y typecheck, y demostrar con un import real temporal que lint falla
   antes de restaurar el archivo.
-- [ ] 1.4 Completar la evidencia y las tareas pendientes del cambio
+- [x] 1.4 Completar la evidencia y las tareas pendientes del cambio
   `phase-0-project-scaffold`, revisarlo y archivarlo antes de introducir
   fórmulas EVM.
 

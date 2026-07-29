@@ -95,5 +95,5 @@
 - [x] 8.3 Confirmar que el commit contiene solo archivos de fase 0, que no
   modifica fuentes cerradas y que `src/` no contiene fórmulas EVM, rutas reales
   ni componentes.
-- [ ] 8.4 Solicitar revisión de código, resolver hallazgos con evidencia y
+- [x] 8.4 Solicitar revisión de código, resolver hallazgos con evidencia y
   validar nuevamente antes de archivar el cambio OpenSpec.
