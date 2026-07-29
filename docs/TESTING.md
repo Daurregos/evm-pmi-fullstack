@@ -67,6 +67,10 @@ Verifica la superficie HTTP contra `contracts/evm/openapi.yaml` y el fixture.
 
 **Sobre el alcance de `validationChecks`:** el bloque captura comportamientos distintos, no la combinatoria completa. La ausencia y el `null` de cada campo obligatorio se cubren con una **prueba parametrizada que recorre `writeSchemas`**, no enumerando catorce casos en el fixture. Su `$scopeNote` lo documenta.
 
+Cada caso de contrato restaura directamente la semilla canónica antes de
+ejecutarse. Por tanto, la suite no presupone una base intacta: puede ejecutarse,
+alterarse el backend real y ejecutarse otra vez sin limpieza externa.
+
 ### Cliente
 
 Verifica el comportamiento del dashboard contra una API simulada que devuelve el fixture.
@@ -109,4 +113,44 @@ Sigue las dependencias, no las capas:
 
 La cobertura de línea es un indicador, no un objetivo. El criterio real es **que cada afirmación de las secciones `Verificación` de los ADR aplicables tenga una prueba que la respalde**, y esa correspondencia se revisa antes de dar por terminado cada nivel.
 
-En el módulo de dominio la cobertura debe ser efectivamente total, porque el fixture ya enumera sus casos. Fuera de él, perseguir un porcentaje produce pruebas que ejercitan código sin verificar comportamiento.
+El comando único local y de CI es:
+
+```bash
+npm run test:coverage
+```
+
+Levanta PostgreSQL solo fuera de CI, aplica migraciones, ejecuta las suites
+estructural, cliente, integración y contrato, y evalúa líneas, ramas, funciones
+y sentencias. Publica el resumen en consola y los reportes
+`coverage/coverage-summary.json`, `coverage/coverage-final.json` y
+`coverage/index.html`. Cualquier métrica por debajo de su mínimo termina con
+código distinto de cero:
+
+| Alcance | Líneas | Ramas | Funciones | Sentencias |
+|---|---:|---:|---:|---:|
+| `src/domain/` | 95 % | 95 % | 95 % | 95 % |
+| `src/application/` | 90 % | 90 % | 90 % | 90 % |
+| Global | 80 % | 80 % | 80 % | 80 % |
+
+En el módulo de dominio la aspiración sigue siendo cobertura total, porque el
+fixture enumera sus decisiones. El mínimo de 95 % es el gate contra regresiones,
+no permiso para omitir casos. Las ramas reciben el mismo peso que las demás
+métricas porque concentran estados evaluables/no evaluables, validaciones y
+casos límite; el reporte final enumera toda alternativa de dominio no cubierta.
+Fuera de él, un porcentaje nunca sustituye la evidencia de comportamiento.
+
+La ejecución usa módulos ESM para que la cobertura de V8 mida decisiones del
+código fuente y no helpers de interoperabilidad CommonJS generados por `tsx`.
+El universo es todo `src/**/*.ts` y `src/**/*.tsx`, con solo estas exclusiones:
+
+- `src/app/mock-api/**`: doble HTTP respaldado por el fixture, no código de
+  producción.
+- `src/infrastructure/mock/**`: infraestructura simulada respaldada por el
+  fixture, no código de producción.
+- `src/application/evm-repository.ts`: puerto compuesto únicamente por tipos.
+- `src/shared/contract.ts`: declaraciones contractuales compuestas únicamente
+  por tipos.
+
+Los archivos de configuración, scripts y pruebas quedan fuera por estar fuera
+de `src/`; los `.d.ts` generados no forman parte de las extensiones medidas. No
+se agrega una exclusión para alcanzar un umbral.

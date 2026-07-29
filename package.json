@@ -1,6 +1,7 @@
 {
   "name": "evm-pmi-fullstack",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "engines": {
     "node": ">=20.19.0"
@@ -21,6 +22,8 @@
     "test:structure": "node --import tsx --test tests/domain/*.test.ts",
     "test:integration": "node --import tsx --test tests/integration/*.test.ts",
     "test:contract": "tsx scripts/run-contract-tests.ts",
+    "test:coverage": "bash scripts/coverage.sh",
+    "test:coverage-policy": "node --import tsx --test 'tests/coverage/*.test.ts'",
     "test": "bash scripts/test.sh"
   },
   "dependencies": {
@@ -38,6 +41,7 @@
     "@types/pg": "8.20.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "c8": "12.0.0",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.12",

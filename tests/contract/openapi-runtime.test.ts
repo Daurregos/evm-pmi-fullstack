@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { after, before, beforeEach, test } from "node:test";
 
-import OpenAPIBackend, { type Document } from "openapi-backend";
+import { type Document, OpenAPIBackend } from "openapi-backend";
 import { parse } from "yaml";
 
 import { createDatabase } from "@/infrastructure/database/client";

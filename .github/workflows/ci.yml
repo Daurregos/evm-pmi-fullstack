@@ -36,8 +36,4 @@ jobs:
       - run: npm run lint
       - run: npm run lint:imports
       - run: npm run typecheck
-      - run: npm run db:migrate
-      - run: npm run test:structure
-      - run: npm run test:client
-      - run: npm run test:integration
-      - run: npm run test:contract
+      - run: npm run test:coverage
