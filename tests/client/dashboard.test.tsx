@@ -132,6 +132,28 @@ test("the selector offers one option per project in the collection", () => {
   assert.ok(markup.includes('selected=""') || markup.includes("selected"));
 });
 
+/**
+ * RF-01: al eliminar el proyecto seleccionado el dashboard queda sin selección
+ * aunque existan otros. Sin una opción vacía el navegador mostraría el primer
+ * proyecto y el selector contradiría a la vista.
+ */
+test("the selector shows no project when nothing is selected", () => {
+  const markup = renderMarkup(
+    <ProjectSelector
+      onSelectProject={() => undefined}
+      projects={projectCollection}
+      selectedProjectId={null}
+    />,
+  );
+
+  assert.equal(occurrences(markup, "<option"), projectCollection.length + 1);
+  assert.deepEqual(attributeValues(markup, "value"), [
+    "",
+    ...projectCollection.map((project) => String(project.id)),
+  ]);
+  assert.ok(visibleText(markup).toLowerCase().includes("elige un proyecto"));
+});
+
 test("the selector without projects reports it instead of failing", () => {
   const markup = renderMarkup(
     <ProjectSelector

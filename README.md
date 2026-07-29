@@ -66,6 +66,38 @@ El cliente no calcula indicadores. `tests/client/client-boundaries.test.ts`
 comprueba que ningún módulo de `src/ui/` importa capas de servidor y que ningún
 módulo del cliente mezcla vocabulario EVM con aritmética.
 
+## Edición desde el dashboard
+
+El dashboard crea, edita y elimina proyectos y actividades sobre las ocho
+operaciones publicadas. Para trabajar contra el backend real:
+
+```bash
+NEXT_PUBLIC_EVM_API_BASE_URL=/ npm run dev
+```
+
+Cómo se comporta la edición:
+
+- El formulario de actividad captura los cinco datos y nada más. Ningún
+  indicador tiene control, y los porcentajes se precargan con los decimales que
+  devolvió el backend. `PUT` reemplaza todos los campos editables, así que el
+  formulario envía todos.
+- La digitación no dispara peticiones. El recálculo ocurre al confirmar, según
+  RF-03: la escritura y la lectura posterior son las dos únicas peticiones.
+- Tras una mutación exitosa, el cliente relee `GET /projects/{projectId}` y
+  reemplaza tabla, resumen y gráfica en un solo cambio de estado. Una mutación de
+  proyecto relee además la colección, porque el selector cambia.
+- Una mutación rechazada no refresca nada y muestra cada infracción del `422`
+  junto al campo que nombra `field`, varias a la vez. El cliente decide con
+  `code` y `rule`; el `message` se muestra y nunca se inspecciona, porque ADR-009
+  lo declara no automatizable. `400`, `404` y una respuesta sin envolvente
+  comparten un aviso genérico.
+- Si la escritura tiene éxito y falla la lectura, el cambio permanece guardado:
+  la interfaz avisa de que la vista está desactualizada y ofrece releer. El
+  reintento no puede repetir la escritura, porque el resultado desactualizado
+  solo conserva la lectura.
+- Al eliminar el proyecto seleccionado, el dashboard queda sin selección aunque
+  existan otros proyectos, según RF-01, y no pide la foto inexistente.
+
 ## Contrato compartido durante el trabajo paralelo
 
 `src/shared/contract.ts` contiene el contrato HTTP completo que consumen
@@ -82,8 +114,9 @@ Deuda no bloqueante posterior al andamiaje:
   un contenedor vacío, con lo que RF-09 quedaría sin prueba en el nivel de
   cliente. Actualizar exige antes un nivel de prueba con DOM.
 - Las pruebas de cliente renderizan con `react-dom/server`, así que no ejercitan
-  efectos ni el `change` del selector. `src/ui/dashboard-view.tsx` se mantiene
-  sin lógica propia por esa razón.
+  efectos ni el `change` del selector, ni el `showModal` de `src/ui/modal.tsx`.
+  `src/ui/dashboard-view.tsx` y `src/ui/modal.tsx` se mantienen sin lógica propia
+  por esa razón: el comportamiento verificable vive en los módulos sin React.
 - Con `PV = 0` y `SV` positivo, RF-08 permite mostrar «avance anticipado». No se
   implementa: el contrato no lleva campo para esa nota y derivarla en el cliente
   sería interpretación, contra ADR-001. Requiere decidir un campo del contrato.
@@ -94,15 +127,17 @@ Deuda no bloqueante posterior al andamiaje:
   §7.4, la spec del dashboard y `docs/ASSUMPTIONS.md`. Corregirlo exige el flujo
   de ADR.
 
-Alcance heredado por B2 para las mutaciones del cliente:
+Las tres comprobaciones de cliente que ADR-007 dejó asignadas a B2 están
+cubiertas en `tests/client/mutation-flow.test.tsx`: la digitación no dispara
+peticiones, una mutación rechazada no refresca y una exitosa sí, y un refresco
+fallido se reintenta sin repetir la escritura. A2 cubre la mitad HTTP/servidor.
 
-- la digitación no dispara peticiones;
-- una mutación rechazada no refresca la foto y una exitosa sí;
-- si el refresco posterior falla, el cliente reintenta la lectura sin repetir
-  la escritura.
+Queda pendiente en el cliente:
 
-Estas comprobaciones materializan en B2 la mitad de cliente de la sección
-`Verificación` de ADR-007; A2 cubre por separado la mitad HTTP/servidor.
+- La confirmación de borrado usa `window.confirm`. El PRD no especifica
+  confirmación; un diálogo propio del producto exigiría decidir su lenguaje.
+- El aviso de vista desactualizada persiste hasta que un refresco tenga éxito o
+  se cambie de proyecto. No hay reintento automático ni temporizador.
 
 - Añadir una prueba de integración del borrado en cascada real; hoy se comprueba
   la declaración `ON DELETE CASCADE` de la migración y del catálogo PostgreSQL.
@@ -116,6 +151,11 @@ Estas comprobaciones materializan en B2 la mitad de cliente de la sección
   usa los identificadores canónicos del fixture.
 - Ejecutar `npm test` sin otro `next dev` activo en el mismo worktree; Next 16
   protege el directorio con un único bloqueo aunque se usen puertos distintos.
+- Vaciar la base antes de `npm test` si se acaba de comprobar el dashboard en el
+  navegador contra ella. Las pruebas de contrato usan los identificadores
+  canónicos del fixture, y las filas creadas a mano pueden hacerlas fallar con
+  `404` sobre recursos que la semilla debería garantizar:
+  `truncate table projects restart identity cascade`.
 - `npm audit --omit=dev` no reporta vulnerabilidades. Permanecen avisos en
   dependencias transitivas de desarrollo de Drizzle Kit y ESLint cuya
   corrección automática exige cambios incompatibles.

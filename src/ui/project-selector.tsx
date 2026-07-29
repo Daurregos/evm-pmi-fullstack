@@ -11,6 +11,10 @@ export interface ProjectSelectorProps {
 /**
  * RF-01: el dashboard analiza un proyecto a la vez, elegido entre los que
  * devuelve `GET /projects`.
+ *
+ * Sin selección —el estado en que RF-01 deja al dashboard tras eliminar el
+ * proyecto seleccionado— el selector ofrece una opción vacía. Sin ella el
+ * navegador mostraría el primer proyecto y el control contradiría a la vista.
  */
 export function ProjectSelector({
   onSelectProject,
@@ -26,6 +30,10 @@ export function ProjectSelector({
         className="selector__control"
         disabled={empty}
         onChange={(event) => {
+          if (event.target.value === "") {
+            return;
+          }
+
           onSelectProject(Number(event.target.value));
         }}
         value={selectedProjectId === null ? "" : String(selectedProjectId)}
@@ -33,11 +41,16 @@ export function ProjectSelector({
         {empty ? (
           <option value="">No hay proyectos registrados</option>
         ) : (
-          projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name}
-            </option>
-          ))
+          <>
+            {selectedProjectId === null ? (
+              <option value="">Elige un proyecto</option>
+            ) : null}
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </>
         )}
       </select>
     </label>
