@@ -65,12 +65,17 @@ function validateCounter(
 ): MetricCounter {
   if (
     !value ||
-    !Number.isFinite(value.total) ||
-    !Number.isFinite(value.covered) ||
-    !Number.isFinite(value.skipped) ||
+    !Number.isInteger(value.total) ||
+    !Number.isInteger(value.covered) ||
+    !Number.isInteger(value.skipped) ||
+    !Number.isFinite(value.pct) ||
     value.total < 0 ||
     value.covered < 0 ||
-    value.covered > value.total
+    value.skipped < 0 ||
+    value.covered > value.total ||
+    value.skipped > value.total ||
+    value.pct < 0 ||
+    value.pct > 100
   ) {
     throw new Error(`Invalid ${metric} coverage for ${filename}`);
   }

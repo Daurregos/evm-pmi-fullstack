@@ -1,0 +1,16 @@
+{
+  "all": true,
+  "clean": true,
+  "exclude-after-remap": true,
+  "extension": [".ts", ".tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "src/app/mock-api/**",
+    "src/application/evm-repository.ts",
+    "src/infrastructure/mock/**",
+    "src/shared/contract.ts"
+  ],
+  "reporter": ["text", "html", "json-summary", "json"],
+  "reports-dir": "coverage",
+  "temp-directory": "coverage/tmp"
+}

@@ -877,6 +877,7 @@ export default defineConfig([
   ...nextVitals,
   globalIgnores([
     ".next/**",
+    "coverage/**",
     "node_modules/**",
     "drizzle/meta/**",
   ]),

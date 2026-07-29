@@ -121,6 +121,38 @@ test("rejects malformed metric counters", () => {
   );
 });
 
+test("rejects invalid metric counter values", () => {
+  const invalidValues: Array<
+    [keyof FileCoverageSummary["lines"], number]
+  > = [
+    ["total", -1],
+    ["total", 1.5],
+    ["covered", -1],
+    ["covered", 1.5],
+    ["covered", 21],
+    ["skipped", -1],
+    ["skipped", 1.5],
+    ["skipped", 21],
+    ["pct", Number.NaN],
+    ["pct", -1],
+    ["pct", 101],
+  ];
+
+  for (const [field, value] of invalidValues) {
+    const malformed = report({
+      "/repo/src/domain/evm.ts": counters(20, 20),
+      "/repo/src/application/evm-analysis.ts": counters(20, 20),
+    });
+    malformed["/repo/src/domain/evm.ts"].lines[field] = value;
+
+    assert.throws(
+      () => evaluateCoverage(malformed, "/repo"),
+      /Invalid lines coverage for .*src\/domain\/evm\.ts/,
+      `${field}=${value} must be rejected`,
+    );
+  }
+});
+
 test("locates every uncovered domain branch alternative", () => {
   const detail: CoverageDetailReport = {
     "/repo/src/domain/evm.ts": {
