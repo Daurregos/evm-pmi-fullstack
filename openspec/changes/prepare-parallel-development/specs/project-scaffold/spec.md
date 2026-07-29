@@ -58,10 +58,11 @@ contener exactamente las seis reglas de ADR-009. Durante el trabajo paralelo,
 
 #### Scenario: Fixture compatible por tipos
 
-- **WHEN** typecheck elimina recursivamente las claves con prefijo `$` del tipo
-  de `readResponse` importado del fixture
+- **WHEN** la prueba de tipos elimina recursivamente las claves con prefijo `$`
+  de `readResponse` y genera desde ese payload un literal TypeScript
 - **THEN** el payload resultante satisface `ProjectAnalysis`
-- **THEN** una divergencia de campos o nulabilidad hace fallar typecheck
+- **THEN** una divergencia de campos, nulabilidad o valores literales hace
+  fallar typecheck y build
 
 #### Scenario: Tipo faltante durante la fase paralela
 

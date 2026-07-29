@@ -59,9 +59,11 @@ application y quedan fuera de `shared/`.
 en `value` y `display`. No se fortalece a una unión discriminada porque este
 cambio congela la forma publicada, no amplía OpenAPI.
 
-La prueba de tipos aplica un mapped type recursivo que elimina claves
-`$${string}` del tipo importado del fixture y exige asignabilidad a
-`ProjectAnalysis`. No recalcula datos ni replica su forma.
+La prueba de tipos carga el fixture, elimina sus claves de metadatos con el
+helper existente y genera temporalmente un literal TypeScript `as const` que
+debe satisfacer `ProjectAnalysis`. Ejecuta el compilador sobre ese literal y
+lo elimina incluso ante un fallo. Así conserva los valores literales que el
+import JSON ensancharía a `string`, sin recalcular datos ni replicar su forma.
 
 ### El fixture sigue siendo el único oráculo numérico
 
@@ -78,9 +80,9 @@ no copias del oráculo.
   `NEXT_PUBLIC_EVM_API_BASE_URL`.
 - [Los cuerpos compartidos permiten `null`] → documentar que son DTO HTTP
   previos a validación y mantener comandos internos fuera de `shared/`.
-- [Un tipo importado desde JSON ensancha literales] → diseñar la aserción de
-  tipos contra la estructura importada y demostrar un RED por exportaciones
-  faltantes antes de completar el contrato.
+- [Un tipo importado desde JSON ensancha literales] → generar desde el JSON
+  limpio un literal temporal `as const satisfies ProjectAnalysis` y ejecutar
+  el compilador sobre él.
 - [El backend futuro ocupa `/projects`] → no conservar pruebas que exijan su
   ausencia; verificar solo que ningún archivo del mock viva allí.
 

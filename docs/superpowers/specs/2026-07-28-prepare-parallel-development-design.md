@@ -123,9 +123,11 @@ comando ya validado. Por eso sus miembros conservan la nulabilidad intencional
 de OpenAPI/ADR-009, necesaria para que el backend clasifique `null` como
 `required`. Los datos validados de aplicación no se añadirán a `shared/`.
 
-Una prueba incluida en `npm run typecheck` importará el JSON, eliminará por tipo
-las claves cuyo nombre empieza por `$` y exigirá que el resultado sea asignable
-a `ProjectAnalysis`. La prueba no recalcula indicadores ni copia valores.
+Una prueba incluida en typecheck y build cargará el JSON, eliminará las claves
+cuyo nombre empieza por `$` con el helper existente y generará temporalmente un
+literal TypeScript `as const satisfies ProjectAnalysis`. El compilador comprueba
+así campos, nulabilidad y uniones literales sin recalcular indicadores ni copiar
+valores.
 
 El README declarará `src/shared/` cerrado durante la fase paralela. Si backend o
 frontend requieren otro DTO, el trabajo se detiene y se reporta la divergencia
