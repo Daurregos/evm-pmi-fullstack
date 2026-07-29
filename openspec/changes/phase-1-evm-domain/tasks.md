@@ -27,7 +27,7 @@
 - [ ] 3.1 Escribir y observar fallar pruebas que carguen el fixture para la
   forma estable de CPI/SPI, cero definido, no evaluabilidad, ocho indicadores
   y estado derivado.
-- [ ] 3.2 Implementar los tipos enfocados y
+- [x] 3.2 Implementar los tipos enfocados y
   `deriveFromMagnitudes(bac, pv, ev, ac)` con aritmética Decimal sin
   cuantización intermedia hasta pasar esas pruebas.
 - [ ] 3.3 Escribir y observar fallar las pruebas de las ocho actividades y

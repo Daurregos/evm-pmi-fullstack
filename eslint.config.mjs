@@ -739,7 +739,11 @@ const decimalPolicyRule = {
       const object = node.object;
       const authorizedOperation =
         authorizedModule &&
-        (method === "set" || method === "toDecimalPlaces");
+        (
+          method === "set" ||
+          method === "toDecimalPlaces" ||
+          method === "toFixed"
+        );
       const unresolvedComputedMethod =
         node.computed && method === undefined;
       if (

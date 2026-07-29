@@ -418,6 +418,7 @@ test("the decimal module may own only its authorized decimal operations", async 
       "Decimal.set({ precision: 40 })",
       "const value = new Decimal(1);",
       "value.toDecimalPlaces(2)",
+      "value.toFixed(2)",
       "const configuredSet = Decimal.set.bind(Decimal);",
       "configuredSet({ precision: 40 });",
       "const quantize = value.toDecimalPlaces.bind(value);",
@@ -438,7 +439,7 @@ test("the decimal module may own only its authorized decimal operations", async 
   const forbiddenRules = await rulesFor(
     [
       'import Decimal from "decimal.js";',
-      "new Decimal(1).toFixed(2)",
+      "new Decimal(1).toPrecision(2)",
     ].join("\n"),
     "src/domain/decimal.ts",
   );

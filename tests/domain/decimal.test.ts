@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import {
   Decimal,
+  formatForPresentation,
   roundForPresentation,
 } from "../../src/domain/decimal";
 
@@ -50,3 +51,16 @@ test("preserves approved fixture values through a JSON number round trip", () =>
     assert.equal(new Decimal(wireNumber).toNumber(), value);
   }
 });
+
+for (const [input, expected] of [
+  ["1e-18", "0,00"],
+  [
+    "99999999999999999999.999999999999999999",
+    "100000000000000000000,00",
+  ],
+  ["1e21", "1000000000000000000000,00"],
+] as const) {
+  test(`formats ${input} in fixed notation with exactly two decimals`, () => {
+    assert.equal(formatForPresentation(input), expected);
+  });
+}
