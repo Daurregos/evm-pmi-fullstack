@@ -42,5 +42,5 @@
   reales están libres y que PRD, ADR, fixture y OpenAPI permanecen intactos.
 - [x] 4.3 Revisar los commits contra `origin/develop`, preservar cambios ajenos,
   resolver hallazgos y repetir las verificaciones afectadas.
-- [ ] 4.4 Archivar `prepare-parallel-development`, verificar el diff histórico
+- [x] 4.4 Archivar `prepare-parallel-development`, verificar el diff histórico
   y abrir un PR dirigido a `develop` sin fusionarlo.

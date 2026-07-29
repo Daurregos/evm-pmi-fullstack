@@ -67,6 +67,8 @@ deriving variations, ratios, projections, interpretation and project progress.
 - **AND** consolidated EAC is not
   `negativeChecks.eacAsSumOfActivityEacs`
 - **AND** consolidated EAC is not `negativeChecks.eacFromRoundedCpi`
+- **AND** consolidated CPI is not
+  `negativeChecks.cpiExcludingZeroAcActivity`
 
 #### Scenario: Empty project
 
