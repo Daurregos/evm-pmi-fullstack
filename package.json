@@ -16,7 +16,7 @@
     "lint": "eslint .",
     "lint:imports": "node --import tsx --test tests/domain/architecture.test.ts",
     "typecheck": "npm run test:types && tsc --noEmit",
-    "test:client": "node --import tsx --test tests/client/*.test.ts",
+    "test:client": "node --import tsx --test 'tests/client/*.test.ts' 'tests/client/*.test.tsx'",
     "test:types": "node --import tsx --test tests/types/*.test.ts",
     "test:structure": "node --import tsx --test tests/domain/*.test.ts",
     "test:integration": "node --import tsx --test tests/integration/*.test.ts",
@@ -29,7 +29,8 @@
     "next": "16.2.12",
     "pg": "8.22.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "recharts": "2.15.4"
   },
   "devDependencies": {
     "@types/node": "22.20.1",
