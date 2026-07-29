@@ -35,12 +35,12 @@
 
 ## 4. Verificar y cerrar
 
-- [ ] 4.1 Ejecutar de forma fresca dominio, cliente, typecheck, lint, imports,
+- [x] 4.1 Ejecutar de forma fresca dominio, cliente, typecheck, lint, imports,
   integración, contrato HTTP, suite completa, build y `git diff --check`,
   leyendo sus salidas completas.
-- [ ] 4.2 Contrastar cada requisito y tarea con el diff, confirmar que las rutas
+- [x] 4.2 Contrastar cada requisito y tarea con el diff, confirmar que las rutas
   reales están libres y que PRD, ADR, fixture y OpenAPI permanecen intactos.
-- [ ] 4.3 Revisar los commits contra `origin/develop`, preservar cambios ajenos,
+- [x] 4.3 Revisar los commits contra `origin/develop`, preservar cambios ajenos,
   resolver hallazgos y repetir las verificaciones afectadas.
 - [ ] 4.4 Archivar `prepare-parallel-development`, verificar el diff histórico
   y abrir un PR dirigido a `develop` sin fusionarlo.
