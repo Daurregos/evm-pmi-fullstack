@@ -502,11 +502,10 @@ git commit -m "feat: configure client API base"
 Crear `tests/types/shared-contract.test.ts`:
 
 ```ts
-import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { rm, writeFile } from "node:fs/promises";
 import { test } from "node:test";
 import { resolve } from "node:path";
-import ts from "typescript";
 
 import {
   loadFixture,
@@ -517,12 +516,47 @@ const generatedProbePath = resolve(
   "tests/types/.shared-contract-fixture.generated.ts",
 );
 
+function runTypeScriptProbe(): Promise<void> {
+  return new Promise((resolveProbe, rejectProbe) => {
+    execFile(
+      process.execPath,
+      [
+        resolve("node_modules/typescript/bin/tsc"),
+        "--noEmit",
+        "--pretty",
+        "false",
+        "--target",
+        "ES2022",
+        "--module",
+        "esnext",
+        "--moduleResolution",
+        "bundler",
+        "--skipLibCheck",
+        "--strict",
+        generatedProbePath,
+      ],
+      { cwd: process.cwd() },
+      (error, stdout, stderr) => {
+        if (error) {
+          rejectProbe(
+            new Error(`${stdout}${stderr}`.trim() || error.message, {
+              cause: error,
+            }),
+          );
+          return;
+        }
+
+        resolveProbe();
+      },
+    );
+  });
+}
+
 test("the stripped fixture read payload satisfies ProjectAnalysis", async () => {
   const payload = stripFixtureMetadata(loadFixture().readResponse);
   const source = [
     'import type { ProjectAnalysis } from "../../src/shared/contract";',
-    `const payload = ${JSON.stringify(payload)} as const`,
-    "  satisfies ProjectAnalysis;",
+    `const payload = ${JSON.stringify(payload)} as const satisfies ProjectAnalysis;`,
     "void payload;",
     "",
   ].join("\n");
@@ -530,34 +564,7 @@ test("the stripped fixture read payload satisfies ProjectAnalysis", async () => 
   await writeFile(generatedProbePath, source, "utf8");
 
   try {
-    const configPath = resolve("tsconfig.json");
-    const config = ts.readConfigFile(configPath, (path) =>
-      ts.sys.readFile(path),
-    );
-    assert.equal(config.error, undefined);
-
-    const parsed = ts.parseJsonConfigFileContent(
-      config.config,
-      ts.sys,
-      process.cwd(),
-      { incremental: false, noEmit: true },
-      configPath,
-    );
-    const program = ts.createProgram({
-      rootNames: [generatedProbePath],
-      options: parsed.options,
-    });
-    const diagnostics = ts.getPreEmitDiagnostics(program);
-
-    assert.deepEqual(
-      diagnostics,
-      [],
-      ts.formatDiagnosticsWithColorAndContext(diagnostics, {
-        getCanonicalFileName: (fileName) => fileName,
-        getCurrentDirectory: () => process.cwd(),
-        getNewLine: () => "\n",
-      }),
-    );
+    await runTypeScriptProbe();
   } finally {
     await rm(generatedProbePath, { force: true });
   }

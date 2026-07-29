@@ -24,13 +24,13 @@
 
 ## 3. Congelar el contrato compartido
 
-- [ ] 3.1 Añadir primero la prueba de tipos que elimina claves `$` del tipo de
+- [x] 3.1 Añadir primero la prueba de tipos que elimina claves `$` del tipo de
   `readResponse`, exige asignabilidad a `ProjectAnalysis` y observar RED por
   exportaciones incompletas.
-- [ ] 3.2 Completar `src/shared/contract.ts` con DTO de lectura, escritura,
+- [x] 3.2 Completar `src/shared/contract.ts` con DTO de lectura, escritura,
   colección, índice y error derivados de OpenAPI y del fixture hasta obtener
   GREEN en typecheck.
-- [ ] 3.3 Auditar nombres, campos, nulabilidad y uniones literales contra
+- [x] 3.3 Auditar nombres, campos, nulabilidad y uniones literales contra
   ADR-006b, ADR-009 y `contracts/evm/openapi.yaml`.
 
 ## 4. Verificar y cerrar
