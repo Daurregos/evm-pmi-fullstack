@@ -136,6 +136,7 @@ async function main(): Promise<void> {
         "--test-concurrency=1",
         "tests/contract/mock-http.test.ts",
         "tests/contract/http-surface-structure.test.ts",
+        "tests/contract/openapi-runtime.test.ts",
         "tests/contract/real-http.test.ts",
       ],
       { env: childEnvironment, stdio: "inherit" },
