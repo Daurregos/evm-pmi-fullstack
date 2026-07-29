@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { ProjectAnalysis } from "../../src/shared/contract";
 import { Dashboard } from "../../src/ui/dashboard";
-import { loadDashboard } from "../../src/ui/dashboard-data";
+import { loadDashboard, withPatch } from "../../src/ui/dashboard-data";
 import {
   attributeValues,
   elementWith,
@@ -121,6 +121,40 @@ test("the sentinel keeps the captured data of the fixture", () => {
   assert.equal(sentinel.actualProgress, original.actualProgress);
   assert.equal(sentinel.ac, original.ac);
   assert.notEqual(sentinel.cpi.display, original.cpi.display);
+});
+
+/**
+ * ADR-007: tabla, consolidado y gráfica se reemplazan juntos. El parche se aplica
+ * de una vez sobre la foto, así que no existe un estado intermedio con la tabla
+ * nueva y el consolidado viejo.
+ */
+test("a patch replaces only what it carries", () => {
+  const before = {
+    analysis: referenceAnalysis,
+    projects: projectCollection,
+    selectedProjectId: 1,
+  };
+
+  const after = withPatch(before, { analysis: sentinelAnalysis });
+
+  assert.deepEqual(after.analysis, sentinelAnalysis);
+  assert.deepEqual(after.projects, projectCollection);
+  assert.equal(after.selectedProjectId, 1);
+});
+
+test("a patch that clears the selection clears the analysis with it", () => {
+  const after = withPatch(
+    {
+      analysis: referenceAnalysis,
+      projects: projectCollection,
+      selectedProjectId: 1,
+    },
+    { analysis: null, projects: [], selectedProjectId: null },
+  );
+
+  assert.equal(after.analysis, null);
+  assert.equal(after.selectedProjectId, null);
+  assert.deepEqual(after.projects, []);
 });
 
 test("a failed read surfaces instead of showing the previous project", async () => {

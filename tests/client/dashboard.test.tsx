@@ -69,6 +69,47 @@ test("the empty project keeps its verdict cards without claiming a diagnosis", (
   assert.ok(visibleText(cost).includes("no evaluable"));
 });
 
+function renderEditable(analysis = referenceAnalysis): string {
+  return renderMarkup(
+    <Dashboard
+      analysis={analysis}
+      onCreateActivity={() => undefined}
+      onDeleteActivity={() => undefined}
+      onDeleteProject={() => undefined}
+      onEditActivity={() => undefined}
+      onEditProject={() => undefined}
+    />,
+  );
+}
+
+/** RF-01 y RF-02 sobre la vista: proyecto y actividades se pueden gestionar. */
+test("the dashboard offers the project and activity actions when it can mutate", () => {
+  const markup = renderEditable();
+
+  assert.deepEqual(attributeValues(markup, "data-action"), [
+    "edit-project",
+    "delete-project",
+    "create-activity",
+  ]);
+  assert.equal(
+    attributeValues(markup, "data-row-actions").length,
+    referenceAnalysis.activities.length,
+  );
+});
+
+test("the read-only dashboard offers no action", () => {
+  assert.deepEqual(attributeValues(reference, "data-action"), []);
+  assert.equal(reference.includes("data-row-actions"), false);
+});
+
+/** Sin esta ruta, un proyecto vacío no podría recibir su primera actividad. */
+test("the empty project can still receive its first activity", () => {
+  const markup = renderEditable(emptyAnalysis);
+
+  assert.ok(markup.includes('data-action="create-activity"'));
+  assert.equal(tableRows(markup).length, 0);
+});
+
 test("the selector offers one option per project in the collection", () => {
   const markup = renderMarkup(
     <ProjectSelector
@@ -89,6 +130,28 @@ test("the selector offers one option per project in the collection", () => {
   }
 
   assert.ok(markup.includes('selected=""') || markup.includes("selected"));
+});
+
+/**
+ * RF-01: al eliminar el proyecto seleccionado el dashboard queda sin selección
+ * aunque existan otros. Sin una opción vacía el navegador mostraría el primer
+ * proyecto y el selector contradiría a la vista.
+ */
+test("the selector shows no project when nothing is selected", () => {
+  const markup = renderMarkup(
+    <ProjectSelector
+      onSelectProject={() => undefined}
+      projects={projectCollection}
+      selectedProjectId={null}
+    />,
+  );
+
+  assert.equal(occurrences(markup, "<option"), projectCollection.length + 1);
+  assert.deepEqual(attributeValues(markup, "value"), [
+    "",
+    ...projectCollection.map((project) => String(project.id)),
+  ]);
+  assert.ok(visibleText(markup).toLowerCase().includes("elige un proyecto"));
 });
 
 test("the selector without projects reports it instead of failing", () => {
