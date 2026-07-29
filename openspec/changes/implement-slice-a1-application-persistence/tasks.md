@@ -25,8 +25,8 @@
 
 ## 5. Architecture and change tracking
 
-- [ ] 5.1 Write docs/ARCHITECTURE.md from the implemented code, covering layers, lint rules, request journey, calculation boundary, all ten ADRs and the A2/mock limitation.
-- [ ] 5.2 Mark completed OpenSpec tasks immediately after their implementation and evidence are complete.
+- [x] 5.1 Write docs/ARCHITECTURE.md from the implemented code, covering layers, lint rules, request journey, calculation boundary, all ten ADRs and the A2/mock limitation.
+- [x] 5.2 Mark completed OpenSpec tasks immediately after their implementation and evidence are complete.
 
 ## 6. Verification
 
