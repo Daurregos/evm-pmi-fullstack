@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+
+jobs:
+  phase-0:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: evm
+          POSTGRES_USER: evm
+          POSTGRES_PASSWORD: evm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U evm -d evm"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://evm:evm@127.0.0.1:5432/evm
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run typecheck
+      - run: npm run test:structure
+      - run: npm run test:integration
+      - run: npm run test:contract
