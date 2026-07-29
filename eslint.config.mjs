@@ -84,7 +84,7 @@ const forbiddenTargetLayers = {
   application: new Set(["app", "ui", "infrastructure"]),
 };
 
-function staticValue(node) {
+function staticValue(node, sourceCode, seenVariables = new Set()) {
   if (
     node?.type === "Literal" &&
     ["string", "number", "boolean"].includes(typeof node.value)
@@ -93,8 +93,8 @@ function staticValue(node) {
   }
 
   if (node?.type === "BinaryExpression" && node.operator === "+") {
-    const left = staticValue(node.left);
-    const right = staticValue(node.right);
+    const left = staticValue(node.left, sourceCode, seenVariables);
+    const right = staticValue(node.right, sourceCode, seenVariables);
     if (left === undefined || right === undefined) {
       return undefined;
     }
@@ -104,7 +104,11 @@ function staticValue(node) {
   if (node?.type === "TemplateLiteral") {
     let value = node.quasis[0]?.value.cooked ?? "";
     for (let index = 0; index < node.expressions.length; index += 1) {
-      const expressionValue = staticValue(node.expressions[index]);
+      const expressionValue = staticValue(
+        node.expressions[index],
+        sourceCode,
+        seenVariables,
+      );
       if (expressionValue === undefined) {
         return undefined;
       }
@@ -114,11 +118,50 @@ function staticValue(node) {
     return value;
   }
 
+  if (
+    sourceCode &&
+    node?.type === "Identifier"
+  ) {
+    const variable = variableForIdentifier(sourceCode, node);
+    const definition = variable?.defs.length === 1
+      ? variable.defs[0]
+      : undefined;
+    if (
+      !variable ||
+      seenVariables.has(variable) ||
+      definition?.type !== "Variable" ||
+      definition.parent?.kind !== "const" ||
+      definition.node.id.type !== "Identifier" ||
+      !definition.node.init
+    ) {
+      return undefined;
+    }
+
+    const nextSeenVariables = new Set(seenVariables);
+    nextSeenVariables.add(variable);
+    return staticValue(
+      definition.node.init,
+      sourceCode,
+      nextSeenVariables,
+    );
+  }
+
+  if (
+    [
+      "ChainExpression",
+      "TSAsExpression",
+      "TSNonNullExpression",
+      "TSTypeAssertion",
+    ].includes(node?.type)
+  ) {
+    return staticValue(node.expression, sourceCode, seenVariables);
+  }
+
   return undefined;
 }
 
-function literalString(node) {
-  const value = staticValue(node);
+function literalString(node, sourceCode) {
+  const value = staticValue(node, sourceCode);
   return typeof value === "string" ? value : undefined;
 }
 
@@ -148,8 +191,8 @@ function isPackage(source, packageName) {
   return source === packageName || source.startsWith(`${packageName}/`);
 }
 
-function sourceFromImportNode(node) {
-  return literalString(node.source);
+function sourceFromImportNode(node, sourceCode) {
+  return literalString(node.source, sourceCode);
 }
 
 function variableForIdentifier(sourceCode, node) {
@@ -171,22 +214,94 @@ function variableForIdentifier(sourceCode, node) {
   return undefined;
 }
 
-function requireSourceNode(sourceCode, node) {
+function unwrapExpression(node) {
+  return [
+    "ChainExpression",
+    "TSAsExpression",
+    "TSNonNullExpression",
+    "TSTypeAssertion",
+  ].includes(node?.type)
+    ? unwrapExpression(node.expression)
+    : node;
+}
+
+function memberName(node, sourceCode) {
+  return node.computed
+    ? literalString(node.property, sourceCode)
+    : node.property.name;
+}
+
+function isUnshadowedIdentifier(sourceCode, node, name) {
+  if (node?.type !== "Identifier" || node.name !== name) {
+    return false;
+  }
+
+  const variable = variableForIdentifier(sourceCode, node);
+  return !variable || variable.defs.length === 0;
+}
+
+function isIdentifierReference(node) {
+  const parent = node.parent;
   if (
-    node.type !== "CallExpression" ||
-    node.callee.type !== "Identifier" ||
-    node.callee.name !== "require" ||
-    node.arguments.length === 0
+    parent?.type === "MemberExpression" &&
+    parent.property === node &&
+    !parent.computed
   ) {
-    return undefined;
+    return false;
   }
 
-  const requireVariable = variableForIdentifier(sourceCode, node.callee);
-  if (requireVariable && requireVariable.defs.length > 0) {
-    return undefined;
+  if (
+    [
+      "MethodDefinition",
+      "Property",
+      "PropertyDefinition",
+      "TSMethodSignature",
+      "TSPropertySignature",
+    ].includes(parent?.type) &&
+    parent.key === node &&
+    !parent.computed &&
+    !parent.shorthand
+  ) {
+    return false;
   }
 
-  return node.arguments[0];
+  if (
+    [
+      "BreakStatement",
+      "ContinueStatement",
+      "LabeledStatement",
+    ].includes(parent?.type) &&
+    parent.label === node
+  ) {
+    return false;
+  }
+
+  if (
+    [
+      "TSInterfaceDeclaration",
+      "TSTypeAliasDeclaration",
+    ].includes(parent?.type) &&
+    parent.id === node
+  ) {
+    return false;
+  }
+
+  return !(
+    parent?.type === "ImportSpecifier" &&
+    parent.imported === node
+  );
+}
+
+function isDirectGlobalRequireCall(sourceCode, node) {
+  return (
+    node?.type === "CallExpression" &&
+    node.callee.type === "Identifier" &&
+    isUnshadowedIdentifier(sourceCode, node.callee, "require")
+  );
+}
+
+function isCanonicalModuleSource(source) {
+  return source === "node:module" || source === "module";
 }
 
 const sourceBoundariesRule = {
@@ -199,6 +314,8 @@ const sourceBoundariesRule = {
       forbiddenDependency:
         "{{layer}} cannot import the concrete dependency {{source}}.",
       forbiddenLayer: "{{layer}} cannot import from {{targetLayer}}.",
+      forbiddenLoaderCapability:
+        "Runtime module-loader capabilities are forbidden in src. Use a direct require(...) call with a statically resolvable source.",
       unresolvedDynamicSource:
         "Dynamic module sources must resolve to a static string.",
     },
@@ -267,15 +384,64 @@ const sourceBoundariesRule = {
     }
 
     function checkImport(node) {
-      checkSource(node, sourceFromImportNode(node));
+      checkSource(node, sourceFromImportNode(node, sourceCode));
     }
 
     function checkDynamicImport(node) {
-      checkSource(node, sourceFromImportNode(node), true);
+      const source = sourceFromImportNode(node, sourceCode);
+      checkSource(node, source, true);
+      if (isCanonicalModuleSource(source)) {
+        context.report({
+          node,
+          messageId: "forbiddenLoaderCapability",
+        });
+      }
+    }
+
+    function checkLoaderReexport(node) {
+      checkImport(node);
+      const source = sourceFromImportNode(node, sourceCode);
+      if (
+        !isCanonicalModuleSource(source) ||
+        node.exportKind === "type"
+      ) {
+        return;
+      }
+
+      if (node.type === "ExportAllDeclaration") {
+        context.report({
+          node,
+          messageId: "forbiddenLoaderCapability",
+        });
+        return;
+      }
+
+      for (const specifier of node.specifiers) {
+        if (specifier.exportKind === "type") {
+          continue;
+        }
+
+        const localName =
+          specifier.type === "ExportSpecifier"
+            ? specifier.local.name ?? specifier.local.value
+            : undefined;
+        if (
+          specifier.type === "ExportDefaultSpecifier" ||
+          specifier.type === "ExportNamespaceSpecifier" ||
+          localName === "createRequire" ||
+          localName === "Module" ||
+          localName === "default"
+        ) {
+          context.report({
+            node: specifier,
+            messageId: "forbiddenLoaderCapability",
+          });
+        }
+      }
     }
 
     function checkNormalizedImport(node) {
-      const source = sourceFromImportNode(node);
+      const source = sourceFromImportNode(node, sourceCode);
       if (
         source &&
         (source.includes("//") ||
@@ -286,19 +452,192 @@ const sourceBoundariesRule = {
       }
     }
 
-    function checkRequire(node) {
-      const sourceNode = requireSourceNode(sourceCode, node);
-      if (sourceNode) {
-        checkSource(node, literalString(sourceNode), true);
+    // Source files may call global require directly, but they may not retain
+    // a dynamic loader capability whose later sources cannot be audited here.
+    // The runtime node:module object is likewise allowed only through a safe,
+    // statically named member or destructuring access.
+    function checkLoaderIdentifier(node) {
+      if (!isIdentifierReference(node)) {
+        return;
+      }
+
+      if (isUnshadowedIdentifier(sourceCode, node, "require")) {
+        const directCall =
+          node.parent?.type === "CallExpression" &&
+          node.parent.callee === node;
+        if (!directCall) {
+          context.report({
+            node,
+            messageId: "forbiddenLoaderCapability",
+          });
+        }
+        return;
+      }
+
+      if (!isUnshadowedIdentifier(sourceCode, node, "module")) {
+        return;
+      }
+
+      const parent = node.parent;
+      const memberAccess =
+        parent?.type === "MemberExpression" &&
+        parent.object === node;
+      const member = memberAccess
+        ? memberName(parent, sourceCode)
+        : undefined;
+      if (
+        !memberAccess ||
+        member === "require" ||
+        (parent.computed && member === undefined)
+      ) {
+        context.report({
+          node,
+          messageId: "forbiddenLoaderCapability",
+        });
       }
     }
 
+    function checkDirectRequire(node) {
+      if (isDirectGlobalRequireCall(sourceCode, node)) {
+        const source = literalString(node.arguments[0], sourceCode);
+        checkSource(
+          node,
+          source,
+          true,
+        );
+        if (
+          isCanonicalModuleSource(source) &&
+          !(
+            node.parent?.type === "MemberExpression" &&
+            node.parent.object === node
+          ) &&
+          !(
+            node.parent?.type === "VariableDeclarator" &&
+            node.parent.init === node &&
+            node.parent.id.type === "ObjectPattern"
+          ) &&
+          !(
+            node.parent?.type === "AssignmentExpression" &&
+            node.parent.right === node &&
+            node.parent.left.type === "ObjectPattern"
+          )
+        ) {
+          context.report({
+            node,
+            messageId: "forbiddenLoaderCapability",
+          });
+        }
+      }
+    }
+
+    function checkLoaderImport(node) {
+      checkNormalizedImport(node);
+      const source = sourceFromImportNode(node, sourceCode);
+      if (
+        !isCanonicalModuleSource(source) ||
+        node.importKind === "type"
+      ) {
+        return;
+      }
+
+      for (const specifier of node.specifiers) {
+        if (specifier.importKind === "type") {
+          continue;
+        }
+
+        const importedName =
+          specifier.type === "ImportSpecifier"
+            ? specifier.imported.name ?? specifier.imported.value
+            : undefined;
+        if (
+          specifier.type === "ImportDefaultSpecifier" ||
+          specifier.type === "ImportNamespaceSpecifier" ||
+          importedName === "createRequire" ||
+          importedName === "Module"
+        ) {
+          context.report({
+            node: specifier,
+            messageId: "forbiddenLoaderCapability",
+          });
+        }
+      }
+    }
+
+    function directCanonicalModuleRequire(node) {
+      return (
+        isDirectGlobalRequireCall(sourceCode, node) &&
+        isCanonicalModuleSource(
+          literalString(node.arguments[0], sourceCode),
+        )
+      );
+    }
+
+    function checkCanonicalModuleAccess(node) {
+      const property = memberName(node, sourceCode);
+      if (
+        directCanonicalModuleRequire(unwrapExpression(node.object)) &&
+        (
+          property === "createRequire" ||
+          (node.computed && property === undefined)
+        )
+      ) {
+        context.report({
+          node,
+          messageId: "forbiddenLoaderCapability",
+        });
+      }
+    }
+
+    function checkCanonicalModulePattern(pattern, source) {
+      if (
+        pattern.type !== "ObjectPattern" ||
+        !directCanonicalModuleRequire(unwrapExpression(source))
+      ) {
+        return;
+      }
+
+      for (const property of pattern.properties) {
+        if (property.type === "RestElement") {
+          context.report({
+            node: property,
+            messageId: "forbiddenLoaderCapability",
+          });
+          continue;
+        }
+
+        const name = property.computed
+          ? literalString(property.key, sourceCode)
+          : property.key.name ?? property.key.value;
+        if (
+          name === "createRequire" ||
+          (property.computed && name === undefined)
+        ) {
+          context.report({
+            node: property,
+            messageId: "forbiddenLoaderCapability",
+          });
+        }
+      }
+    }
+
+    function checkCanonicalModuleVariable(node) {
+      checkCanonicalModulePattern(node.id, node.init);
+    }
+
+    function checkCanonicalModuleAssignment(node) {
+      checkCanonicalModulePattern(node.left, node.right);
+    }
+
     return {
-      CallExpression: checkRequire,
-      ExportAllDeclaration: checkImport,
-      ExportNamedDeclaration: checkImport,
-      ImportDeclaration: checkNormalizedImport,
+      AssignmentExpression: checkCanonicalModuleAssignment,
+      CallExpression: checkDirectRequire,
+      ExportAllDeclaration: checkLoaderReexport,
+      ExportNamedDeclaration: checkLoaderReexport,
+      Identifier: checkLoaderIdentifier,
+      ImportDeclaration: checkLoaderImport,
       ImportExpression: checkDynamicImport,
+      MemberExpression: checkCanonicalModuleAccess,
+      VariableDeclarator: checkCanonicalModuleVariable,
     };
   },
 };
@@ -367,22 +706,31 @@ const decimalPolicyRule = {
       );
     }
 
-    function receiverIsDecimal(node, method) {
-      const receiverType = checker.getTypeAtLocation(
-        esTreeNodeToTSNodeMap.get(node),
-      );
+    function typeAt(node) {
+      return checker.getTypeAtLocation(esTreeNodeToTSNodeMap.get(node));
+    }
+
+    function typeIsDecimal(receiverType, method) {
       return (
-        symbolComesFromDecimal(
-          checker.getPropertyOfType(receiverType, method),
-        ) || typeComesFromDecimal(receiverType)
+        (
+          typeof method === "string" &&
+          symbolComesFromDecimal(
+            checker.getPropertyOfType(receiverType, method),
+          )
+        ) ||
+        typeComesFromDecimal(receiverType)
       );
+    }
+
+    function receiverIsDecimal(node, method) {
+      return typeIsDecimal(typeAt(node), method);
     }
 
     function propertyName(node) {
       const property =
         node.type === "Property" ? node.key : node.property;
       return node.computed
-        ? literalString(property)
+        ? literalString(property, sourceCode)
         : property.name ?? property.value;
     }
 
@@ -392,18 +740,52 @@ const decimalPolicyRule = {
       const authorizedOperation =
         authorizedModule &&
         (method === "set" || method === "toDecimalPlaces");
+      const unresolvedComputedMethod =
+        node.computed && method === undefined;
       if (
         !authorizedOperation &&
-        decimalPolicyMethods.has(method) &&
+        (
+          decimalPolicyMethods.has(method) ||
+          unresolvedComputedMethod
+        ) &&
         receiverIsDecimal(object, method)
       ) {
         context.report({ node, messageId: "restrictedOperation" });
       }
     }
 
-    function checkObjectPattern(pattern, receiver) {
+    function checkPattern(pattern, receiverType = typeAt(pattern)) {
+      if (pattern.type === "AssignmentPattern") {
+        checkPattern(pattern.left, receiverType);
+        return;
+      }
+
+      if (pattern.type === "RestElement") {
+        checkPattern(pattern.argument, receiverType);
+        return;
+      }
+
+      if (pattern.type === "ArrayPattern") {
+        for (const element of pattern.elements) {
+          if (element) {
+            checkPattern(element);
+          }
+        }
+        return;
+      }
+
+      if (pattern.type === "TSParameterProperty") {
+        checkPattern(pattern.parameter);
+        return;
+      }
+
+      if (pattern.type !== "ObjectPattern") {
+        return;
+      }
+
       for (const property of pattern.properties) {
-        if (property.type !== "Property") {
+        if (property.type === "RestElement") {
+          checkPattern(property.argument);
           continue;
         }
 
@@ -411,30 +793,69 @@ const decimalPolicyRule = {
         const authorizedOperation =
           authorizedModule &&
           (method === "set" || method === "toDecimalPlaces");
+        const unresolvedComputedMethod =
+          property.computed && method === undefined;
         if (
           !authorizedOperation &&
-          decimalPolicyMethods.has(method) &&
-          receiverIsDecimal(receiver, method)
+          (
+            decimalPolicyMethods.has(method) ||
+            unresolvedComputedMethod
+          ) &&
+          typeIsDecimal(receiverType, method)
         ) {
           context.report({ node: property, messageId: "restrictedOperation" });
         }
+
+        const propertySymbol =
+          typeof method === "string"
+            ? checker.getPropertyOfType(receiverType, method)
+            : undefined;
+        const propertyType = propertySymbol
+          ? checker.getTypeOfSymbolAtLocation(
+            propertySymbol,
+            esTreeNodeToTSNodeMap.get(property.value),
+          )
+          : typeAt(property.value);
+        checkPattern(property.value, propertyType);
       }
     }
 
     function checkAssignmentDestructuring(node) {
-      if (node.left.type === "ObjectPattern") {
-        checkObjectPattern(node.left, node.right);
-      }
+      checkPattern(node.left, typeAt(node.right));
     }
 
     function checkVariableDestructuring(node) {
-      if (node.id.type === "ObjectPattern" && node.init) {
-        checkObjectPattern(node.id, node.init);
+      if (node.init) {
+        checkPattern(node.id, typeAt(node.init));
+      }
+    }
+
+    function checkForOfDestructuring(node) {
+      const iterableType = typeAt(node.right);
+      const elementType =
+        checker.getElementTypeOfArrayType(iterableType) ??
+        checker.getIndexTypeOfType(iterableType, ts.IndexKind.Number);
+      if (node.left.type === "VariableDeclaration") {
+        for (const declaration of node.left.declarations) {
+          checkPattern(declaration.id, elementType ?? typeAt(declaration.id));
+        }
+      } else {
+        checkPattern(node.left, elementType ?? typeAt(node.left));
+      }
+    }
+
+    function checkFunctionParameters(node) {
+      for (const parameter of node.params) {
+        checkPattern(parameter);
       }
     }
 
     return {
       AssignmentExpression: checkAssignmentDestructuring,
+      ArrowFunctionExpression: checkFunctionParameters,
+      ForOfStatement: checkForOfDestructuring,
+      FunctionDeclaration: checkFunctionParameters,
+      FunctionExpression: checkFunctionParameters,
       MemberExpression: checkMember,
       VariableDeclarator: checkVariableDestructuring,
     };

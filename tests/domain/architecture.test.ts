@@ -267,6 +267,139 @@ test("extracted and bound Decimal policy methods are rejected by type", async ()
   );
 });
 
+test("Decimal methods destructured from typed parameters are rejected", async () => {
+  const rules = await rulesFor(
+    [
+      'import { Decimal } from "@/domain/decimal";',
+      "declare const value: Decimal;",
+      "function format({ toFixed }: Decimal) {",
+      "  return toFixed.call(value, 2);",
+      "}",
+      "function configure({ set }: typeof Decimal) {",
+      "  set({ precision: 20 });",
+      "}",
+      "const formatDefault = ({ toPrecision }: Decimal = value) =>",
+      "  toPrecision.call(value, 2);",
+      "const configureRest = ({ set, ...rest }: typeof Decimal) => {",
+      "  set({ precision: 20 });",
+      "  return rest;",
+      "};",
+      "function formatRestParameter(",
+      "  ...[{ toExponential }]: [Decimal]",
+      ") {",
+      "  return toExponential.call(value, 2);",
+      "}",
+    ].join("\n"),
+    "src/infrastructure/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/decimal-policy").length,
+    5,
+  );
+});
+
+test("nested Decimal destructuring is rejected recursively", async () => {
+  const rules = await rulesFor(
+    [
+      'import { Decimal } from "@/domain/decimal";',
+      "declare const decimal: Decimal;",
+      "declare const wrapped: { value: Decimal };",
+      "declare const wrappedList: readonly [{ value: Decimal }];",
+      "function nestedParameter(",
+      "  { value: { toFixed } }: { value: Decimal }",
+      ") {",
+      "  return toFixed.call(decimal, 2);",
+      "}",
+      "const { value: { toPrecision } } = wrapped;",
+      "toPrecision.call(decimal, 2);",
+      "let assigned: Decimal[\"toFixed\"];",
+      "({ value: { toFixed: assigned } } = wrapped);",
+      "assigned.call(decimal, 2);",
+      "const [{ value: { toExponential } }] = wrappedList;",
+      "toExponential.call(decimal, 2);",
+    ].join("\n"),
+    "src/infrastructure/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/decimal-policy").length,
+    4,
+  );
+});
+
+test("for-of Decimal destructuring is rejected", async () => {
+  const rules = await rulesFor(
+    [
+      'import { Decimal } from "@/domain/decimal";',
+      "declare const decimal: Decimal;",
+      "declare const decimalValues: readonly Decimal[];",
+      "for (const { toFixed } of decimalValues) {",
+      "  toFixed.call(decimal, 2);",
+      "}",
+      "let toPrecision: Decimal[\"toPrecision\"];",
+      "for ({ toPrecision } of decimalValues) {",
+      "  toPrecision.call(decimal, 2);",
+      "}",
+      "async function inspect(values: AsyncIterable<Decimal>) {",
+      "  for await (const { toExponential } of values) {",
+      "    toExponential.call(decimal, 2);",
+      "  }",
+      "}",
+    ].join("\n"),
+    "src/infrastructure/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/decimal-policy").length,
+    3,
+  );
+});
+
+test("Decimal computed policy methods resolve through const aliases", async () => {
+  const rules = await rulesFor(
+    [
+      'import { Decimal } from "@/domain/decimal";',
+      "declare const value: Decimal;",
+      'const instanceMethod = "toFixed";',
+      "const instanceAlias = instanceMethod;",
+      "value[instanceAlias](2);",
+      'const staticMethod = "set";',
+      "const staticAlias = staticMethod;",
+      "Decimal[staticAlias]({ precision: 20 });",
+    ].join("\n"),
+    "src/infrastructure/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/decimal-policy").length,
+    2,
+  );
+});
+
+test("unknown computed methods are rejected on Decimal receivers", async () => {
+  const rules = await rulesFor(
+    [
+      'import { Decimal } from "@/domain/decimal";',
+      "declare const value: Decimal;",
+      "declare const instanceMethod: string;",
+      "declare const staticMethod: string;",
+      "value[instanceMethod](2);",
+      "Decimal[staticMethod]({ precision: 20 });",
+      "const { [instanceMethod]: instanceExtracted } = value;",
+      "const { [staticMethod]: staticExtracted } = Decimal;",
+      "void instanceExtracted;",
+      "void staticExtracted;",
+    ].join("\n"),
+    "src/infrastructure/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/decimal-policy").length,
+    4,
+  );
+});
+
 test("decimal.js imports are rejected outside the authorized module", async () => {
   for (const filePath of [
     "src/domain/invalid.ts",
@@ -289,6 +422,10 @@ test("the decimal module may own only its authorized decimal operations", async 
       "configuredSet({ precision: 40 });",
       "const quantize = value.toDecimalPlaces.bind(value);",
       "quantize(2);",
+      'const setMethod = "set";',
+      "Decimal[setMethod]({ precision: 40 });",
+      'const quantizeMethod = "toDecimalPlaces";',
+      "value[quantizeMethod](2);",
       'import("decimal.js/decimal.mjs");',
       'require("decimal.js/decimal.mjs");',
     ].join("\n"),
@@ -544,6 +681,352 @@ test("decimal.js may not be required outside the decimal module", async () => {
   );
 });
 
+test("standard CommonJS loader variants enforce source boundaries", async () => {
+  const rules = await rulesFor(
+    [
+      "const load = require;",
+      'load("@/infrastructure/x");',
+      "const load2 = load;",
+      'load2("@/app/x");',
+      'require.call(undefined, "@/infrastructure/x");',
+      'require.apply(undefined, ["@/app/x"]);',
+      "const bound = require.bind(undefined);",
+      'bound("@/infrastructure/x");',
+      'module.require("@/app/x");',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    5,
+  );
+});
+
+test("standard CommonJS loader variants preserve Decimal centralization", async () => {
+  const rules = await rulesFor(
+    [
+      "const load = require;",
+      "const load2 = load;",
+      'load2("decimal.js/decimal.mjs");',
+      'require.call(undefined, "decimal.js/decimal.mjs");',
+      'require.apply(undefined, ["decimal.js"]);',
+      "const bound = require.bind(undefined);",
+      'bound("decimal.js");',
+      'module.require("decimal.js");',
+    ].join("\n"),
+    "src/shared/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    5,
+  );
+});
+
+test("canonical createRequire loaders enforce boundaries and Decimal policy", async () => {
+  const rules = await rulesFor(
+    [
+      'import { createRequire, createRequire as makeRequire } from "node:module";',
+      'import { createRequire as legacyCreateRequire } from "module";',
+      "const loadModule = createRequire(import.meta.url);",
+      'loadModule("@/infrastructure/x");',
+      'loadModule("decimal.js/decimal.mjs");',
+      "const loadModule2 = loadModule;",
+      'loadModule2("@/app/x");',
+      'createRequire(import.meta.url)("@/infrastructure/y");',
+      "const factoryAlias = makeRequire;",
+      "const aliasLoader = factoryAlias(import.meta.url);",
+      'aliasLoader("decimal.js");',
+      'legacyCreateRequire(import.meta.url)("@/app/y");',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    3,
+  );
+});
+
+test("unresolved standard loader sources follow dynamic-source policy", async () => {
+  const rules = await rulesFor(
+    [
+      'import { createRequire } from "node:module";',
+      "declare const source: string;",
+      "const load = require;",
+      "load(source);",
+      "require.call(undefined, source);",
+      "require.apply(undefined, [source]);",
+      "const bound = require.bind(undefined);",
+      "bound(source);",
+      "module.require(source);",
+      "const loadModule = createRequire(import.meta.url);",
+      "loadModule(source);",
+      "createRequire(import.meta.url)(source);",
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    6,
+  );
+});
+
+test("canonical module-object imports are prohibited at creation", async () => {
+  const rules = await rulesFor(
+    [
+      'import * as moduleApi from "node:module";',
+      'import moduleApiDefault from "node:module";',
+      'moduleApi.createRequire(import.meta.url)("@/infrastructure/x");',
+      'moduleApiDefault.createRequire(import.meta.url)("decimal.js");',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    2,
+  );
+});
+
+test("dynamic canonical module imports are prohibited", async () => {
+  const rules = await rulesFor(
+    [
+      'import("node:module");',
+      'import("module");',
+      'const moduleSource = "module";',
+      "const moduleAlias = moduleSource;",
+      "import(moduleAlias);",
+      'const nodePrefix = "node:";',
+      "const nodeModuleSource = `${nodePrefix}module`;",
+      "import(nodeModuleSource);",
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    4,
+  );
+});
+
+test("canonical loader-capability reexports are prohibited", async () => {
+  const rules = await rulesFor(
+    [
+      'export { createRequire as nodeCreateRequire } from "node:module";',
+      'export { Module as LegacyModule } from "module";',
+      'export { default as ModuleDefault } from "node:module";',
+      'export * as ModuleNamespace from "node:module";',
+      'export * from "module";',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    5,
+  );
+});
+
+test("named runtime Module imports are prohibited at creation", async () => {
+  const rules = await rulesFor(
+    [
+      'import { Module } from "node:module";',
+      'import { Module as LegacyModule } from "module";',
+      "const ModuleAlias = Module;",
+      "const LoaderModule = ModuleAlias;",
+      "LoaderModule.createRequire(import.meta.url);",
+      "const LegacyModuleAlias = LegacyModule;",
+      "LegacyModuleAlias.createRequire(import.meta.url);",
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    2,
+  );
+});
+
+test("createRequire extracted from direct require is prohibited at creation", async () => {
+  const rules = await rulesFor(
+    [
+      'const { createRequire } = require("node:module");',
+      'createRequire(import.meta.url)("@/infrastructure/x");',
+      'const factory = require("module").createRequire;',
+      'factory(import.meta.url)("decimal.js");',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    2,
+  );
+});
+
+test("canonical runtime module objects are rejected when stored", async () => {
+  const rules = await rulesFor(
+    [
+      'const moduleApi = require("node:module");',
+      "const moduleAlias = moduleApi;",
+      "const moduleAlias2 = moduleAlias;",
+      'moduleAlias2.createRequire(import.meta.url)("@/infrastructure/x");',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    1,
+  );
+});
+
+test("assignment patterns cannot extract canonical createRequire capability", async () => {
+  const rules = await rulesFor(
+    [
+      "let createRequire: unknown;",
+      "let nestedFactory: unknown;",
+      "let moduleRest: unknown;",
+      '({ createRequire } = require("node:module"));',
+      "({ createRequire: { bind: nestedFactory } } =",
+      '  require("module"));',
+      '({ ...moduleRest } = require("node:module"));',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    3,
+  );
+});
+
+test("global module rejects unresolved computed loader access", async () => {
+  const rules = await rulesFor(
+    [
+      "declare const key: string;",
+      "module[key];",
+      'module["require"]("@/infrastructure/x");',
+      'module["exports"];',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    2,
+  );
+});
+
+test("type members and labels named require or module are not runtime references", async () => {
+  const rules = await rulesFor(
+    [
+      "interface LoaderShape {",
+      "  require(source: string): unknown;",
+      "  module: string;",
+      "}",
+      "type ModuleShape = {",
+      "  require: (source: string) => unknown;",
+      "  module(): void;",
+      "};",
+      "interface require { module: string }",
+      "type module = { require(): void };",
+      "require: { break require; }",
+      "module: { break module; }",
+    ].join("\n"),
+    "src/domain/valid.ts",
+  );
+
+  assert.ok(!rules.includes("phase0/source-boundaries"));
+});
+
+test("type-only canonical module imports remain allowed", async () => {
+  const rules = await rulesFor(
+    [
+      'import type * as ModuleTypes from "node:module";',
+      'import type { createRequire as CreateRequire, Module as ModuleType } from "module";',
+      'import { type createRequire as NodeCreateRequire, type Module as NodeModuleType } from "node:module";',
+      "type ModuleFactory = typeof ModuleTypes.createRequire;",
+      "type LegacyFactory = typeof CreateRequire;",
+      "type NodeFactory = typeof NodeCreateRequire;",
+      "type LegacyModule = ModuleType;",
+      "type NodeModule = NodeModuleType;",
+    ].join("\n"),
+    "src/domain/valid.ts",
+  );
+
+  assert.ok(!rules.includes("phase0/source-boundaries"));
+});
+
+test("safe and type-only canonical module reexports remain allowed", async () => {
+  const rules = await rulesFor(
+    [
+      'export { isBuiltin } from "node:module";',
+      'export type { createRequire as CreateRequireType, Module as ModuleType } from "node:module";',
+      'export { type Module as LegacyModuleType } from "module";',
+      'export type { default as ModuleDefaultType } from "node:module";',
+      'export type * as ModuleTypes from "node:module";',
+      'export type * from "module";',
+    ].join("\n"),
+    "src/domain/valid.ts",
+  );
+
+  assert.ok(!rules.includes("phase0/source-boundaries"));
+});
+
+test("bound createRequire aliases are rejected at canonical import", async () => {
+  const rules = await rulesFor(
+    [
+      'import { createRequire } from "node:module";',
+      "const boundFactory = createRequire.bind(undefined);",
+      "const factoryAlias = boundFactory;",
+      "const loader = factoryAlias(import.meta.url);",
+      'loader("@/infrastructure/x");',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    1,
+  );
+});
+
+test("global module aliases are rejected at their first reference", async () => {
+  const rules = await rulesFor(
+    [
+      "const moduleAlias = module;",
+      "const moduleAlias2 = moduleAlias;",
+      'moduleAlias2.require("@/infrastructure/x");',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    1,
+  );
+});
+
+test("nested require call binding is rejected at capability references", async () => {
+  const rules = await rulesFor(
+    [
+      "const invoke = require.call.bind(require);",
+      "const invokeAlias = invoke;",
+      'invokeAlias(undefined, "@/infrastructure/x");',
+    ].join("\n"),
+    "src/domain/invalid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    2,
+  );
+});
+
 test("allowed domain require dependencies are not rejected globally", async () => {
   const rules = await rulesFor(
     'const types = require("@/domain/evm-types");',
@@ -562,6 +1045,126 @@ test("literal same-layer dynamic sources and shadowed require remain allowed", a
       "  require(name);",
       '  require("@/infrastructure/database/schema");',
       "}",
+    ].join("\n"),
+    "src/domain/valid.ts",
+  );
+
+  assert.ok(!rules.includes("phase0/source-boundaries"));
+});
+
+test("local and homonymous loader functions remain allowed", async () => {
+  const rules = await rulesFor(
+    [
+      'import { createRequire as localFactory } from "./factory";',
+      "type Loader = ((source: string) => unknown) & {",
+      "  call(thisArg: unknown, source: string): unknown;",
+      "  apply(thisArg: unknown, sources: string[]): unknown;",
+      "  bind(thisArg: unknown): (source: string) => unknown;",
+      "};",
+      "function inspect(require: Loader) {",
+      "  const load = require;",
+      "  const load2 = load;",
+      '  load2("@/infrastructure/x");',
+      '  require.call(undefined, "@/app/x");',
+      '  require.apply(undefined, ["decimal.js"]);',
+      "  const bound = require.bind(undefined);",
+      '  bound("decimal.js/decimal.mjs");',
+      "  const invoke = require.call.bind(require);",
+      "  const invokeAlias = invoke;",
+      '  invokeAlias(undefined, "@/infrastructure/x");',
+      "}",
+      "const helper = {",
+      "  require: (source: string) => source,",
+      "  call: (_thisArg: unknown, source: string) => source,",
+      "  apply: (_thisArg: unknown, sources: string[]) => sources[0],",
+      "  bind: () => (source: string) => source,",
+      "};",
+      'helper.require("@/infrastructure/x");',
+      'helper.call(undefined, "@/app/x");',
+      'helper.apply(undefined, ["decimal.js"]);',
+      'helper.bind()("decimal.js/decimal.mjs");',
+      "const module = { require: (source: string) => source };",
+      'module.require("@/infrastructure/x");',
+      "const moduleAlias = module;",
+      "const moduleAlias2 = moduleAlias;",
+      'moduleAlias2.require("decimal.js");',
+      "declare const moduleKey: string;",
+      "module[moduleKey];",
+      "function createRequire(_url: string) {",
+      "  return (source: string) => source;",
+      "}",
+      'createRequire(import.meta.url)("decimal.js");',
+      "const boundFactory = createRequire.bind(undefined);",
+      "const factoryAlias = boundFactory;",
+      'factoryAlias(import.meta.url)("@/infrastructure/x");',
+      "const localLoader = localFactory(import.meta.url);",
+      'localLoader("@/infrastructure/x");',
+      "const allowed = globalThis.require;",
+      'allowed("@/infrastructure/x");',
+    ].join("\n"),
+    "src/domain/valid.ts",
+  );
+
+  assert.ok(!rules.includes("phase0/source-boundaries"));
+});
+
+test("local and shadowed Module homonyms remain allowed", async () => {
+  const rules = await rulesFor(
+    [
+      'import { Module as LocalModule } from "./module-helper";',
+      "class Module {",
+      "  static createRequire(_url: string) {",
+      "    return (source: string) => source;",
+      "  }",
+      "}",
+      "const ModuleAlias = Module;",
+      'ModuleAlias.createRequire(import.meta.url)("node:module");',
+      "const ImportedModuleAlias = LocalModule;",
+      'ImportedModuleAlias.createRequire(import.meta.url)("module");',
+      "function inspect(Module: typeof LocalModule) {",
+      "  const ShadowedModule = Module;",
+      '  return ShadowedModule.createRequire(import.meta.url)("node:module");',
+      "}",
+    ].join("\n"),
+    "src/domain/valid.ts",
+  );
+
+  assert.ok(!rules.includes("phase0/source-boundaries"));
+});
+
+test("standard loader capabilities are rejected even for same-layer sources", async () => {
+  const rules = await rulesFor(
+    [
+      'import { createRequire as makeRequire } from "node:module";',
+      "const load = require;",
+      'load("@/domain/evm");',
+      'require.call(undefined, "@/domain/decimal");',
+      'require.apply(undefined, ["@/domain/evm"]);',
+      "const bound = require.bind(undefined);",
+      'bound("@/domain/decimal");',
+      'module.require("@/domain/evm");',
+      'makeRequire(import.meta.url)("@/domain/decimal");',
+    ].join("\n"),
+    "src/domain/valid.ts",
+  );
+
+  assert.equal(
+    rules.filter((rule) => rule === "phase0/source-boundaries").length,
+    6,
+  );
+});
+
+test("named non-loader module imports remain allowed", async () => {
+  const rules = await rulesFor(
+    [
+      'import { isBuiltin } from "node:module";',
+      'import { isBuiltin as legacyIsBuiltin } from "module";',
+      'const { isBuiltin: requiredIsBuiltin } = require("node:module");',
+      'const requiredIsBuiltin2 = require("module").isBuiltin;',
+      'isBuiltin("@/infrastructure/x");',
+      'legacyIsBuiltin("decimal.js");',
+      'requiredIsBuiltin("node:fs");',
+      'requiredIsBuiltin2("fs");',
     ].join("\n"),
     "src/domain/valid.ts",
   );
@@ -590,6 +1193,30 @@ test("similarly named non-Decimal operations and exact Decimal operations remain
       "numberFormat.call(n, 2);",
       "const boundNumberFormat = n.toFixed.bind(n);",
       "boundNumberFormat(2);",
+      "function formatNumber({ toFixed }: number) {",
+      "  return toFixed.call(1, 2);",
+      "}",
+      "const updateMap = ({ set }: Map<string, string>) =>",
+      '  set.call(new Map<string, string>(), "key", "value");',
+      "declare const unknownMethod: string;",
+      "const dynamicHelper: Record<string, () => void> = {};",
+      "dynamicHelper[unknownMethod]();",
+      "declare const wrappedNumber: { value: number };",
+      "declare const wrappedNumbers: readonly { value: number }[];",
+      "function nestedNumber(",
+      "  { value: { toFixed } }: { value: number }",
+      ") {",
+      "  return toFixed.call(1, 2);",
+      "}",
+      "const { value: { toPrecision } } = wrappedNumber;",
+      "toPrecision.call(1, 2);",
+      "for (const { value: { toFixed } } of wrappedNumbers) {",
+      "  toFixed.call(1, 2);",
+      "}",
+      "let numberToPrecision: (precision?: number) => string;",
+      "for ({ value: { toPrecision: numberToPrecision } } of wrappedNumbers) {",
+      "  numberToPrecision.call(1, 2);",
+      "}",
     ].join("\n"),
     "src/infrastructure/valid.ts",
   );
