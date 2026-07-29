@@ -1,12 +1,12 @@
 ## 1. Cerrar el oráculo de dominio
 
-- [ ] 1.1 Ampliar el tipo local de `negativeChecks`, demostrar RED excluyendo
+- [x] 1.1 Ampliar el tipo local de `negativeChecks`, demostrar RED excluyendo
   temporalmente `a4` y añadir la cuarta aserción contra el valor leído del
   fixture usando todas las actividades.
-- [ ] 1.2 Auditar expectativas de dominio codificadas a mano, hacer que el caso
+- [x] 1.2 Auditar expectativas de dominio codificadas a mano, hacer que el caso
   decimal representado por `a7.cpi` lea entrada y salida del fixture y retirar
   conteos redundantes que copian la longitud de sus arreglos.
-- [ ] 1.3 Alinear `docs/TESTING.md` y `contracts/evm/FIXTURE.md` con las cuatro
+- [x] 1.3 Alinear `docs/TESTING.md` y `contracts/evm/FIXTURE.md` con las cuatro
   comprobaciones negativas y verificar la prueba de dominio aislada.
 
 ## 2. Aislar el mock y configurar la base

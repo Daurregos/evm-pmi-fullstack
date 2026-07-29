@@ -65,6 +65,18 @@ negativeChecks: {
 };
 ```
 
+Añadir un helper que lea el valor presentado sin copiar su expectativa:
+
+```ts
+function displayedIndexAsNumber(index: evm.IndexResult): number | null {
+  if (index.display === null) {
+    return null;
+  }
+
+  return Number(index.display.replace(/^[<>]/, "").replace(",", "."));
+}
+```
+
 ```ts
 const result = evm.consolidateProject(
   fixture.readResponse.activities
@@ -75,10 +87,14 @@ const result = evm.consolidateProject(
 
 ```ts
 assert.notEqual(
-  result.cpi.value?.toNumber(),
+  displayedIndexAsNumber(result.cpi),
   negative.cpiExcludingZeroAcActivity,
 );
 ```
+
+Usar el mismo helper para `negative.cpiAsAverageOfIndices`: ambos valores CPI
+de `negativeChecks` están expresados en la presentación de dos decimales,
+mientras EAC conserva comparaciones numéricas directas.
 
 - [ ] **Step 2: Ejecutar el test y verificar RED sensible**
 
@@ -88,9 +104,8 @@ Run:
 node --import tsx --test tests/domain/evm.test.ts
 ```
 
-Expected: FAIL solo en
-`negative.cpiExcludingZeroAcActivity`, porque el resultado incorrecto es el
-valor leído del fixture.
+Expected: FAIL solo en `negative.cpiExcludingZeroAcActivity`, porque el
+`display` de la estrategia incorrecta es el valor leído del fixture.
 
 - [ ] **Step 3: Restaurar la consolidación completa y retirar copias de longitudes**
 

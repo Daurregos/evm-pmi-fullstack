@@ -15,6 +15,13 @@ const fixture = JSON.parse(
   ),
 ) as {
   readResponse: {
+    activities: ReadonlyArray<{
+      $id: string;
+      cpi: {
+        value: number;
+        display: string;
+      };
+    }>;
     summary: {
       cpi: { value: number };
       eac: number;
@@ -29,10 +36,18 @@ test("configures the shared Decimal constructor with precision 40", () => {
   assert.equal(Decimal.rounding, Decimal.ROUND_HALF_UP);
 });
 
+const fixtureTie = fixture.readResponse.activities.find(
+  (activity) => activity.$id === "a7",
+);
+assert.ok(fixtureTie);
+
 for (const [input, expected] of [
   ["1.005", "1.01"],
   ["-1.005", "-1.01"],
-  ["0.625", "0.63"],
+  [
+    fixtureTie.cpi.value.toString(),
+    fixtureTie.cpi.display.replace(",", "."),
+  ],
 ] as const) {
   test(`rounds ${input} to ${expected} away from zero`, () => {
     assert.equal(roundForPresentation(input).toString(), expected);

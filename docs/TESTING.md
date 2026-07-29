@@ -31,7 +31,12 @@ Es el nivel de mayor densidad y el primero que se escribe. **Corre sin base de d
 Cubre:
 
 - Los ocho indicadores de cada una de las ocho actividades del fixture y del consolidado.
-- La regla de consolidación de RF-04: sumar magnitudes antes de calcular ratios. Se verifica con **aserciones negativas** contra `negativeChecks`: el CPI consolidado **no** es 0,73 —el promedio de índices—, el EAC **no** es 52.710,00 —la suma de EAC—, y no se obtiene 71.578,95 al calcular desde el valor ya redondeado.
+- La regla de consolidación de RF-04: sumar magnitudes antes de calcular
+  ratios. Se verifica con **aserciones negativas** contra `negativeChecks`: el
+  CPI consolidado **no** es 0,73 —el promedio de índices— ni 0,85 —el resultado
+  de excluir la actividad con EV positivo y AC cero—; el EAC **no** es
+  52.710,00 —la suma de EAC— ni 71.578,95 —el cálculo desde el CPI ya
+  redondeado—.
 - Los cinco casos de la taxonomía del PRD §7.3 y las cuatro combinaciones de evaluabilidad de CPI y SPI.
 - La distinción entre cero definido y no evaluable: `cpi.value = 0` con `status: "unfavorable"` frente a `value: null` con `status: "not_evaluable"`.
 - El proyecto vacío.
