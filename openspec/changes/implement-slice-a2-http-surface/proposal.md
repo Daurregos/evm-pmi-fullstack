@@ -14,6 +14,8 @@ semantics decided by ADR-006a, ADR-006b, ADR-007 and ADR-009.
 - Add fixture-backed contract tests against the real routes and PostgreSQL
   while preserving the existing `/mock-api` double and client tests.
 - Complete only the pending A2 request journey in `docs/ARCHITECTURE.md`.
+- Record in `README.md` the client-side ADR-007 checks inherited by the
+  already allocated B2 slice.
 
 ## Capabilities
 
@@ -32,5 +34,6 @@ semantics decided by ADR-006a, ADR-006b, ADR-007 and ADR-009.
 
 The change affects `src/app/projects/`, HTTP composition and translation under
 `src/infrastructure/`, contract tests and their runner, and the pending journey
-in `docs/ARCHITECTURE.md`. It adds no dependency and does not modify the PRD,
-ADRs, OpenAPI, fixture, domain, application, shared contract, UI or mock API.
+in `docs/ARCHITECTURE.md`, plus the B2 handoff in `README.md`. It adds no
+dependency and does not modify the PRD, ADRs, OpenAPI, fixture, domain,
+application, shared contract, UI or mock API.

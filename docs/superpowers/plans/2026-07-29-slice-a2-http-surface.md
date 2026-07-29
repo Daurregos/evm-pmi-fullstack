@@ -898,6 +898,7 @@ git commit -m "docs: complete the real HTTP request journey"
 
 **Files:**
 
+- Modify: `README.md`
 - Modify:
   `openspec/changes/implement-slice-a2-http-surface/tasks.md`
 - Verify: every file in this plan
@@ -913,8 +914,10 @@ Map every statement in each `## Verificación` section:
   shapes, integer ids, full-date, JSON number preservation, index objects,
   markers and non-evaluable values.
 - ADR-007 → real mutation representations and bodyless delete, project
-  no-analysis structural test, separate aggregate read after activity mutation,
-  plus existing integration and client refresh tests.
+  no-analysis structural test, focused `cutoffDate` preservation, separate
+  aggregate read after activity mutation and existing integration tests. The
+  three client-flow checks are assigned explicitly to B2 in `README.md`; they
+  are not A2 evidence.
 - ADR-009 → thirteen cases, V9 seven violations, missing/null matrix, unknown,
   read-only, lateral whitespace, 400, 404, state intact and no internal details.
 

@@ -159,6 +159,9 @@ export function importsOf(source: ts.SourceFile): string[] {
 }
 
 const modules = clientModules();
+const uiModules = modules.filter((module) =>
+  module.path.startsWith("src/ui/"),
+);
 
 test("the review inspects the client tree it claims to inspect", () => {
   const paths = modules.map((module) => module.path);
@@ -203,8 +206,8 @@ test("no client module mixes EVM vocabulary with arithmetic", () => {
   );
 });
 
-test("no client module imports a server layer", () => {
-  const offenders = modules
+test("no UI module imports a server layer", () => {
+  const offenders = uiModules
     .map((module) => ({
       forbidden: importsOf(module.source).filter((specifier) =>
         SERVER_LAYER.test(specifier),

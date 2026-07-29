@@ -133,9 +133,10 @@ exception messages, stack traces, framework details or database details.
 
 A rejected write SHALL leave the persisted project analysis unchanged.
 Project creation or replacement SHALL return only `ProjectRead` and SHALL NOT
-trigger project-indicator recalculation. Activity creation or replacement SHALL
-return `ActivityRead` with indicators derived synchronously by A1 from the new
-captured values.
+trigger project-indicator recalculation. Changing only `cutoffDate` SHALL
+preserve every activity and consolidated indicator. Activity creation or
+replacement SHALL return `ActivityRead` with indicators derived synchronously
+by A1 from the new captured values.
 
 #### Scenario: Business rejection leaves exact state intact
 
@@ -156,6 +157,12 @@ captured values.
 - **WHEN** a project is created or replaced successfully
 - **THEN** the response contains exactly `id`, `name` and `cutoffDate` and no
   activity, summary or derived indicator
+
+#### Scenario: Cutoff date only relabels the project photo
+
+- **WHEN** only `cutoffDate` is replaced through the real HTTP route
+- **THEN** a subsequent aggregate read has exactly the same activities and
+  summary as before the replacement
 
 #### Scenario: Activity mutation derives its read representation
 

@@ -87,6 +87,16 @@ The real suite compares violation identity by `field` and `rule`, requires each
 message, and ignores violation order and wording. It proves state preservation
 by reading the exact seeded analysis before and after rejected requests.
 
+### ADR-007 verification is partitioned by slice
+
+A2 verifies the server half of ADR-007: create and replace return their read
+representations, deletes have no body, project mutations request no analysis,
+and changing only `cutoffDate` preserves activities and summary. The three
+client-flow checks belong to the already allocated B2 slice and are recorded
+as explicit inherited scope in `README.md`: typing performs no request,
+rejected writes do not refresh while successful writes do, and a failed
+refresh retries only the read.
+
 ## Risks / Trade-offs
 
 - [A structural check accidentally classifies business invalidity as `400`] →

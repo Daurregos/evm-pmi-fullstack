@@ -176,10 +176,9 @@ test("PUT /projects/1 returns the exact fixture ProjectRead", async () => {
   );
 });
 
-test("project replacement changes no activity or summary", async () => {
+test("changing cutoffDate preserves all project indicators", async () => {
   const before = (await request("/projects/1")).body as JsonObject;
   const replacement = projectWrite({
-    name: "Proyecto reetiquetado",
     cutoffDate: "2026-08-01",
   });
 
