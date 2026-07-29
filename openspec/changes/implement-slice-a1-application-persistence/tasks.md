@@ -30,6 +30,6 @@
 
 ## 6. Verification
 
-- [ ] 6.1 Run fresh integration, domain, typecheck, lint, import, contract, full-suite and build commands; inspect all output.
-- [ ] 6.2 Contrast every applicable ADR verification statement and OpenSpec task with the final diff, run git diff --check and confirm only slice files are staged for commits.
-- [ ] 6.3 Review final branch, commit logical changes and confirm its unpublished PR destination would be develop without merging.
+- [x] 6.1 Run fresh integration, domain, typecheck, lint, import, contract, full-suite and build commands; inspect all output.
+- [x] 6.2 Contrast every applicable ADR verification statement and OpenSpec task with the final diff, run git diff --check and confirm only slice files are staged for commits.
+- [x] 6.3 Review final branch, commit logical changes and confirm its unpublished PR destination would be develop without merging.
