@@ -145,16 +145,19 @@ comprobación de tipos, migraciones y suite completa con un servicio PostgreSQL.
 - **THEN** el workflow de CI falla antes de integrar
 
 ### Requirement: Ciclo de vida de la sonda decimal
-La sonda de viabilidad MUST residir en `scripts/verify-decimal.mjs`, permanecer
-independiente de `src/` y quedar fuera de lint, suite y CI. Su cabecera y README
-MUST registrar que ya fue satisfecha y que debe archivarse o eliminarse en el
-primer slice de fase 1.
+Las garantías equivalentes a la sonda decimal MUST residir en pruebas
+permanentes que verifiquen la configuración decimal, los empates `1.005`,
+`-1.005` y `0.625`, y la ida y vuelta JSON observable. El archivo
+`scripts/verify-decimal.mjs` MUST dejar de existir y MUST carecer de referencias
+ejecutables o ignores activos.
 
-#### Scenario: Ejecución de la suite
-- **WHEN** se ejecutan pruebas locales o CI
-- **THEN** la sonda no forma parte de los comandos ejecutados
+#### Scenario: Garantías trasladadas a la suite permanente
+- **WHEN** se ejecuta la suite permanente de dominio
+- **THEN** las pruebas verifican la configuración decimal, los tres empates y
+  la ida y vuelta JSON que cubría la sonda
 
-#### Scenario: Inspección de la sonda
-- **WHEN** se lee su cabecera
-- **THEN** se identifica como comprobación independiente de una sola ejecución
-  con retiro pendiente en fase 1
+#### Scenario: Retiro completo de la sonda
+- **WHEN** se inspeccionan los scripts y la configuración ejecutable del
+  repositorio
+- **THEN** `scripts/verify-decimal.mjs` no existe ni permanece referenciado o
+  excluido mediante un ignore activo

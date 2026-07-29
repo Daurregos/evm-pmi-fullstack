@@ -68,8 +68,8 @@
   salidas.
 - [x] 6.2 Contrastar cada requisito de la spec, cada tarea y cada afirmación de
   `Verificación` de ADR-001 contra pruebas o revisión estructural concreta.
-- [ ] 6.3 Revisar que los commits contienen solo el cambio, que las fuentes
+- [x] 6.3 Revisar que los commits contienen solo el cambio, que las fuentes
   cerradas y cambios locales ajenos permanecen intactos, y resolver los
   hallazgos de revisión con nueva verificación.
-- [ ] 6.4 Archivar `phase-1-evm-domain`, confirmar el diff histórico y preparar
+- [x] 6.4 Archivar `phase-1-evm-domain`, confirmar el diff histórico y preparar
   un PR dirigido a `develop` sin fusionarlo.
