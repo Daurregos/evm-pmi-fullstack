@@ -11,9 +11,9 @@
 
 ## 2. Aislar el mock y configurar la base
 
-- [ ] 2.1 Cambiar primero las pruebas HTTP y el runner a
+- [x] 2.1 Cambiar primero las pruebas HTTP y el runner a
   `/mock-api/projects`, ejecutar el contrato y observar el RED esperado.
-- [ ] 2.2 Mover los handlers a `src/app/mock-api/projects/`, eliminar los
+- [x] 2.2 Mover los handlers a `src/app/mock-api/projects/`, eliminar los
   handlers mock de `src/app/projects/` y comprobar en GREEN colección, dos
   lecturas y tres envolventes de error.
 - [ ] 2.3 Añadir primero pruebas de resolución predeterminada, relativa y

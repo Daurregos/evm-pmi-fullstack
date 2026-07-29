@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 
 const baseUrl = "http://127.0.0.1:3100";
+const mockPrefix = "/mock-api";
 
 async function waitForServer(
   server: ChildProcess,
@@ -14,7 +15,7 @@ async function waitForServer(
     }
 
     try {
-      const response = await fetch(`${baseUrl}/projects`);
+      const response = await fetch(`${baseUrl}${mockPrefix}/projects`);
       if (
         response.ok &&
         response.headers.get("x-mock-instance") === instanceId

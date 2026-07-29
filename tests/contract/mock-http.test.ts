@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const baseUrl = "http://127.0.0.1:3100";
+const mockPrefix = "/mock-api";
 
 type JsonObject = { [key: string]: JsonValue };
 type JsonValue = JsonObject | JsonValue[] | boolean | number | string | null;
@@ -60,16 +61,16 @@ async function getJson(
   };
 }
 
-test("GET /projects serves the fixture collection", async () => {
-  const response = await getJson("/projects");
+test("GET /mock-api/projects serves the fixture collection", async () => {
+  const response = await getJson(`${mockPrefix}/projects`);
   const expected = fixture.collectionResponse as JsonObject;
 
   assert.equal(response.status, expected.expectedStatus);
   assert.deepEqual(response.body, expected.expectedBody);
 });
 
-test("GET /projects/1 serves the stripped fixture project", async () => {
-  const response = await getJson("/projects/1");
+test("GET /mock-api/projects/1 serves the stripped fixture project", async () => {
+  const response = await getJson(`${mockPrefix}/projects/1`);
   const expectedBody = stripFixtureMetadata(fixture.readResponse);
   const expectedStatus = (
     (fixture.successResponses as JsonObject).getProject as JsonObject
@@ -80,8 +81,8 @@ test("GET /projects/1 serves the stripped fixture project", async () => {
   assertContainsNoFixtureMetadata(response.body);
 });
 
-test("GET /projects/2 serves the stripped empty fixture project", async () => {
-  const response = await getJson("/projects/2");
+test("GET /mock-api/projects/2 serves the stripped empty fixture project", async () => {
+  const response = await getJson(`${mockPrefix}/projects/2`);
   const expectedBody = stripFixtureMetadata(fixture.emptyProject);
   const expectedStatus = (
     (fixture.successResponses as JsonObject).getProject as JsonObject
@@ -92,8 +93,8 @@ test("GET /projects/2 serves the stripped empty fixture project", async () => {
   assertContainsNoFixtureMetadata(response.body);
 });
 
-test("GET /projects/:projectId serves the fixture not-found error for an unknown id", async () => {
-  const response = await getJson("/projects/999");
+test("GET /mock-api/projects/:projectId serves the fixture not-found error for an unknown id", async () => {
+  const response = await getJson(`${mockPrefix}/projects/999`);
   const expected = (fixture.errorEnvelopes as JsonObject)
     .notFound as JsonObject;
 
@@ -107,7 +108,7 @@ for (const scenario of [
   "validationFailed",
 ]) {
   test(`x-mock-scenario=${scenario} serves its fixture error`, async () => {
-    const response = await getJson("/projects", {
+    const response = await getJson(`${mockPrefix}/projects`, {
       "x-mock-scenario": scenario,
     });
     const expected = ((fixture.errorEnvelopes as JsonObject)[
